@@ -6,20 +6,25 @@ USE_OCAMLFIND = true
 OCAMLINCLUDES += ../src
 
 FILES[] =
-	test_lexer
+	test
 
 OCAMLPACKS[] =
 	oUnit
 
-PROGRAM = test
+PROGRAM = testrun
+
 OCAML_LIBS += ../src/libhatch
 
 clean:
 	rm -f *~ *.opt *.cmi *.cmx *.o *.omc *.cma *.cmxa
 
-.DEFAULT: check
+OCamlProgram($(PROGRAM), $(FILES))
 
-all : $(OCamlProgram $(PROGRAM), $(FILES))
-
-check : all
+check : $(PROGRAM)
 	./$(PROGRAM)
+
+.DEFAULT: $(PROGRAM) check
+
+#
+# ref. http://d.hatena.ne.jp/mzp/20100709/ocaml
+#

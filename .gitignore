@@ -1,0 +1,10 @@
+*.cmxa
+*.cmx
+*.cmi
+*.opt
+*.a
+/test/testrun
+/src/hatch
+/src/lexer.ml
+/src/parser.ml
+/src/parser.mli

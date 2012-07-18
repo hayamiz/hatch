@@ -1,7 +1,10 @@
 /* File parser.mly */
+
 %token <int> INT
-%token PLUS MINUS TIMES DIV
+%token PLUS MINUS MUL DIV
 %token LPAREN RPAREN
+%token LBRAKET RBRAKET
+%token LBRACE RBRACE
 %token EOL
 %left PLUS MINUS        /* lowest precedence */
 %left TIMES DIV         /* medium precedence */
@@ -17,7 +20,7 @@ expr:
   | LPAREN expr RPAREN      { $2 }
   | expr PLUS expr          { $1 + $3 }
   | expr MINUS expr         { $1 - $3 }
-  | expr TIMES expr         { $1 * $3 }
+  | expr MUL expr           { $1 * $3 }
   | expr DIV expr           { $1 / $3 }
   | MINUS expr %prec UMINUS { - $2 }
 ;

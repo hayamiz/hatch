@@ -9,7 +9,7 @@ rule token = parse
   | ['0'-'9']+     { INT(int_of_string(Lexing.lexeme lexbuf)) }
   | '+'            { PLUS }
   | '-'            { MINUS }
-  | '*'            { TIMES }
+  | '*'            { MUL }
   | '/'            { DIV }
   | '('            { LPAREN }
   | ')'            { RPAREN }
