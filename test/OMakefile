@@ -1,0 +1,25 @@
+# test/OMakefile
+.PHONY: all clean check
+
+USE_OCAMLFIND = true
+
+OCAMLINCLUDES += ../src
+
+FILES[] =
+	test_lexer
+
+OCAMLPACKS[] =
+	oUnit
+
+PROGRAM = test
+OCAML_LIBS += ../src/libhatch
+
+clean:
+	rm -f *~ *.opt *.cmi *.cmx *.o *.omc *.cma *.cmxa
+
+.DEFAULT: check
+
+all : $(OCamlProgram $(PROGRAM), $(FILES))
+
+check : all
+	./$(PROGRAM)
