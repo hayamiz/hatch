@@ -14,6 +14,7 @@ OCAMLPACKS[] =
 PROGRAM = testrun
 
 OCAML_LIBS += ../src/libhatch
+OCAML_OTHER_LIBS += str
 
 clean:
 	rm -f *~ *.opt *.cmi *.cmx *.o *.omc *.cma *.cmxa
