@@ -19,8 +19,13 @@ let unquote_str str =
 rule token = parse
     [' ' '\t']     { token lexbuf }     (* skip blanks *)
   | '#' [^ '\n']*  { token lexbuf }		(* comment *)
-  | ['\n' ]        { EOL noloc }
   | "undefined"    { UNDEF noloc }
+  | "lambda"       { LAMBDA noloc }
+  | "bind"         { BIND noloc }
+  | "->"           { RARROW noloc }
+  | "if"           { IF noloc }
+  | "elseif"       { ELSEIF noloc }
+  | "else"         { ELSE noloc }
   | "true"         { TRUE noloc }
   | "false"        { FALSE noloc }
   | ['A'-'Z' 'a'-'z'] ['A'-'Z' 'a'-'z' '0'-'9']*
@@ -47,4 +52,4 @@ rule token = parse
   | '<'            { LE noloc }
   | '>'            { GE noloc }
   | '='            { EQ noloc }
-  | eof            { raise Eof }
+  | eof            { EOF noloc }
