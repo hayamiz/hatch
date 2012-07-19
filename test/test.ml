@@ -28,6 +28,8 @@ let test_string_of_token _ =
   assert_equal ~printer:id "LAND" (ParserUtil.string_of_token (LAND noloc));
   assert_equal ~printer:id "LOR" (ParserUtil.string_of_token (LOR noloc));
   assert_equal ~printer:id "LNOT" (ParserUtil.string_of_token (LNOT noloc));
+  assert_equal ~printer:id "LET" (ParserUtil.string_of_token (LET noloc));
+  assert_equal ~printer:id "IN" (ParserUtil.string_of_token (IN noloc));
   ()
 
 let test_string_of_tokens _ =
@@ -294,20 +296,55 @@ let test_parser_bind_expr _ =
 	(tokens_from_string "bind foo -> 1");
 
   assert_eq_egg_expr
-	(ExpBind ("foo", ExpLiteral (LitInt 1, noloc), noloc))
+	(ExpBind ([("foo", ExpLiteral (LitInt 1, noloc))],
+			  noloc))
 	("bind foo -> 1");
 
   assert_eq_egg_expr
-	(ExpBind ("foo",
-			  ExpClosure (["a"; "b"; "c"],
-						 ExpSeq ([ExpLiteral (LitIdent "a", noloc);
-								  ExpLiteral (LitIdent "b", noloc);
-								  ExpLiteral (LitIdent "c", noloc)], noloc),
-						 noloc),
+	(ExpBind ([("foo", ExpLiteral (LitInt 1, noloc));
+			   ("bar", ExpLiteral (LitInt 2, noloc))],
+			  noloc))
+	("bind foo -> 1, bar -> 2");
+
+  assert_eq_egg_expr
+	(ExpBind ([("foo",
+				ExpClosure (["a"; "b"; "c"],
+							ExpSeq ([ExpLiteral (LitIdent "a", noloc);
+									 ExpLiteral (LitIdent "b", noloc);
+									 ExpLiteral (LitIdent "c", noloc)], noloc),
+							noloc))],
 			  noloc))
 	("bind foo -> lambda (a,b,c) { a; b; c }");
 
   ()
+
+let test_parser_let_expr _ =
+  assert_eq_tokens
+	[LET (noloc); IDENT ("foo", noloc); RARROW noloc; INT (1, noloc); IN (noloc); INT (2, noloc)]
+	(tokens_from_string "let foo -> 1 in 2");
+
+  assert_eq_egg_expr
+	(ExpLet ([("foo", ExpLiteral (LitString "bar", noloc))],
+			 ExpLiteral (LitIdent "c", noloc),
+			 noloc))
+	("let foo -> \"bar\" in c");
+
+  assert_eq_egg_expr
+	(ExpLet ([("foo", ExpLiteral (LitString "bar", noloc));
+			  ("hoge", ExpLiteral (LitInt 1, noloc))],
+			 ExpLiteral (LitIdent "c", noloc),
+			 noloc))
+	("let foo -> \"bar\", hoge -> 1 in c");
+
+  assert_eq_egg_expr
+	(ExpLet ([("foo", ExpLiteral (LitString "bar", noloc));
+			  ("hoge", ExpLiteral (LitInt 1, noloc))],
+			 ExpLiteral (LitIdent "c", noloc),
+			 noloc))
+	("let foo -> \"bar\", hoge -> 1 { c }");
+
+  ()
+
 
 let test_parser_prefix_expr _ =
   assert_eq_egg_expr
@@ -639,6 +676,7 @@ let _ = add_suites begin "Parser" >::: [
   "parser_closure_expr" >:: test_parser_closure_expr;
   "parser_apply_expr" >:: test_parser_apply_expr;
   "parser_bind_expr" >:: test_parser_bind_expr;
+  "parser_let_expr" >:: test_parser_let_expr;
   "parser_prefix_expr" >:: test_parser_prefix_expr;
   "parser_infix_expr" >:: test_parser_infix_expr;
   "parser_infix_expr_mul_div" >:: test_parser_infix_expr_mul_div;

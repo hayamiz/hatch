@@ -48,7 +48,7 @@
 %token <Tree.location> LAND LOR LNOT
 %token <Tree.location> LAMBDA
 %token <Tree.location> IF ELSE
-%token <Tree.location> BIND RARROW
+%token <Tree.location> BIND RARROW LET IN
 %token <Tree.location> EOF
 %left LAND LOR          /* 5th precedence */
 %left EQ LE GE LT GT    /* 4th precedence */
@@ -75,6 +75,7 @@ expr:
   | closure_expr      { $1 }
   | apply_expr        { $1 }
   | bind_expr         { $1 }
+  | let_expr          { $1 }
   | infix_expr        { $1 }
   | block_expr        { $1 }
   | if_expr           { $1 }
@@ -94,8 +95,17 @@ argument_list:
 apply_expr:
     primary_expr LPAREN argument_list RPAREN   { ExpApply ($1, $3, noloc) }
 
+assignments:
+    IDENT RARROW expr COMMA assignments  { let (id, _) = $1 in (id, $3) :: $5 }
+  | IDENT RARROW expr                    { let (id, _) = $1 in [(id, $3)] }
+
 bind_expr:
-    BIND IDENT RARROW expr   { let (id,_) = $2 in ExpBind (id, $4, noloc) }
+    BIND assignments  { ExpBind ($2, noloc) }
+
+let_expr:
+    LET assignments IN expr  { ExpLet ($2, $4, noloc) }
+  | LET assignments LBRACE compound_expr RBRACE
+                             { ExpLet ($2, $4, noloc) }
 
 prefix_expr:
     primary_expr                    { $1 }

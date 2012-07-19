@@ -22,6 +22,8 @@ rule token = parse
   | "undefined"    { UNDEF noloc }
   | "lambda"       { LAMBDA noloc }
   | "bind"         { BIND noloc }
+  | "let"          { LET noloc }
+  | "in"           { IN noloc }
   | "->"           { RARROW noloc }
   | "if"           { IF noloc }
   | "else"         { ELSE noloc }

@@ -14,23 +14,23 @@ let string_of_token tok =
 	  INT (x, noloc) -> "INT " ^ (string_of_int x)
 	| FLOAT (x, noloc) -> "FLOAT " ^ (string_of_float x)
 	| STRING (str, noloc) -> "STRING \"" ^ (quote_string str) ^ "\""
-	| TRUE noloc -> "TRUE"
+	| TRUE noloc  -> "TRUE"
 	| FALSE noloc -> "FALSE"
 	| UNDEF noloc -> "UNDEF"
-	| PLUS noloc -> "PLUS"
+	| PLUS noloc  -> "PLUS"
 	| MINUS noloc -> "MINUS"
-	| MUL noloc -> "MUL"
-	| DIV noloc -> "DIV"
+	| MUL noloc  -> "MUL"
+	| DIV noloc  -> "DIV"
 	| LAND noloc -> "LAND"
 	| LOR  noloc -> "LOR"
 	| LNOT noloc -> "LNOT"
-	| LPAREN noloc -> "LPAREN"
-	| RPAREN noloc -> "RPAREN"
+	| LPAREN noloc  -> "LPAREN"
+	| RPAREN noloc  -> "RPAREN"
 	| LBRAKET noloc -> "LBRAKET"
 	| RBRAKET noloc -> "RBRAKET"
-	| LBRACE noloc -> "LBRACE"
-	| RBRACE noloc -> "RBRACE"
-	| COMMA noloc -> "COMMA"
+	| LBRACE noloc  -> "LBRACE"
+	| RBRACE noloc  -> "RBRACE"
+	| COMMA noloc   -> "COMMA"
 	| SEMICOLON noloc -> "SEMICOLON"
 	| DOT noloc -> "DOT"
 	| EQ noloc -> "EQ"
@@ -39,12 +39,14 @@ let string_of_token tok =
 	| LT noloc -> "LT"
 	| GT noloc -> "GT"
 	| IDENT (id, noloc) -> "IDENT \"" ^ id ^ "\""
-	| LAMBDA _ -> "LAMBDA"
-	| IF _ -> "IF"
-	| ELSE _ -> "ELSE"
-	| BIND _ -> "BIND"
-	| RARROW _ -> "RARROW"
-	| EOF noloc -> "EOF"
+	| LAMBDA _   -> "LAMBDA"
+	| IF _       -> "IF"
+	| ELSE _     -> "ELSE"
+	| BIND _     -> "BIND"
+	| LET _      -> "LET"
+	| RARROW _   -> "RARROW"
+	| IN _       -> "IN"
+	| EOF noloc  -> "EOF"
 	(* | _ -> "UNKNOWN_TOKEN" *)
 ;;
 
@@ -70,23 +72,23 @@ let string_of_literal lit =
 
 let string_of_prefix_oper op =
   match op with
-	  PrefixPlus -> "+"
+	  PrefixPlus  -> "+"
 	| PrefixMinus -> "-"
-	| PrefixLnot -> "!"
+	| PrefixLnot  -> "!"
 
 let string_of_infix_oper op =
   match op with
-	  InfixPlus -> "+"
+	  InfixPlus  -> "+"
 	| InfixMinus -> "-"
-	| InfixMul -> "*"
-	| InfixDiv -> "/"
-	| InfixEq -> "="
-	| InfixLe -> "<="
-	| InfixGe -> ">="
-	| InfixLt -> "<"
-	| InfixGt -> ">"
-	| InfixLand -> "&&"
-	| InfixLor -> "||"
+	| InfixMul   -> "*"
+	| InfixDiv   -> "/"
+	| InfixEq    -> "="
+	| InfixLe    -> "<="
+	| InfixGe    -> ">="
+	| InfixLt    -> "<"
+	| InfixGt    -> ">"
+	| InfixLand  -> "&&"
+	| InfixLor   -> "||"
 
 let rec string_of_expr ?(indent = 0) e =
   let is = String.make indent ' '
@@ -99,7 +101,21 @@ let rec string_of_expr ?(indent = 0) e =
 		  is ^ "}"
 	| ExpApply (f, args, _) ->
 		"Apply " ^ (string_of_expr f) ^ "(" ^ (String.concat "," (List.map string_of_expr args)) ^ ")"
-	| ExpBind (id, e, _) -> "Bind " ^ id ^ " -> " ^ (string_of_expr e)
+	| ExpBind (bindings, _) ->
+		is ^ "Bind" ^ "\n" ^
+		  (String.concat "\n"
+			 (List.map (fun (id, e) ->
+						  is ^ "  " ^ id ^ " ->\n" ^
+							(string_of_expr e ~indent:(indent+4)))
+				bindings))
+	| ExpLet (bindings, body, _) ->
+		is ^ "Let" ^ "\n" ^
+		  (String.concat "\n"
+			 (List.map (fun (id, e) ->
+						  is ^ "  " ^ id ^ " ->\n" ^
+							(string_of_expr e ~indent:(indent+4)))
+				bindings)) ^ "\n" ^
+		  (string_of_expr body ~indent:(indent+2))
 	| ExpPrefix (op, e, _) ->
 		is ^ "Prefix: " ^ (string_of_prefix_oper op) ^ "\n" ^
 		  (string_of_expr e ~indent:(indent+2))
