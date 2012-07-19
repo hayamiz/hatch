@@ -41,7 +41,6 @@ let string_of_token tok =
 	| IDENT (id, noloc) -> "IDENT \"" ^ id ^ "\""
 	| LAMBDA _ -> "LAMBDA"
 	| IF _ -> "IF"
-	| ELSEIF _ -> "ELSEIF"
 	| ELSE _ -> "ELSE"
 	| BIND _ -> "BIND"
 	| RARROW _ -> "RARROW"
@@ -109,8 +108,17 @@ let rec string_of_expr ?(indent = 0) e =
 		  (string_of_expr e1 ~indent:(indent+2)) ^ "\n" ^
 		  (string_of_expr e2 ~indent:(indent+2))
 	| ExpSeq (es, _) ->
-		"Seq " ^ "\n" ^
+		is ^ "Seq " ^ "\n" ^
 		  (String.concat "\n" (List.map (fun e -> string_of_expr e ~indent:(indent+2)) es ))
+	| ExpIf  (cond, if_clause, ExpNop, _) ->
+		is ^ "If" ^ "\n" ^
+		  (string_of_expr cond ~indent:(indent+2)) ^ "\n" ^
+		  (string_of_expr if_clause ~indent:(indent+2))
+	| ExpIf  (cond, if_clause, else_clause, _) ->
+		is ^ "If" ^ "\n" ^
+		  (string_of_expr cond ~indent:(indent+2)) ^ "\n" ^
+		  (string_of_expr if_clause ~indent:(indent+2)) ^ "\n" ^
+		  (string_of_expr else_clause ~indent:(indent+2))
 	| _ -> raise (Failure "string_of_expr not implemented")
 ;;
 

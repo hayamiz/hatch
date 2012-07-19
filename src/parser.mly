@@ -47,7 +47,7 @@
 %token <Tree.location> EQ LE GE LT GT
 %token <Tree.location> LAND LOR LNOT
 %token <Tree.location> LAMBDA
-%token <Tree.location> IF ELSEIF ELSE
+%token <Tree.location> IF ELSE
 %token <Tree.location> BIND RARROW
 %token <Tree.location> EOF
 %left LAND LOR          /* 5th precedence */
@@ -77,6 +77,7 @@ expr:
   | bind_expr         { $1 }
   | infix_expr        { $1 }
   | block_expr        { $1 }
+  | if_expr           { $1 }
 
 primary_expr:
     literal             { $1 }
@@ -128,6 +129,13 @@ compound_expr:
   | expr                          { make_comp_expr $1 (ExpSeq ([], noloc))}
   |                               { ExpSeq ([], noloc) }
 
+cond_expr:
+    primary_expr        { $1 }
+  | infix_expr          { $1 }
+
+if_expr:
+    IF cond_expr expr ELSE expr  { ExpIf ($2, $3, $5, noloc) }
+  | IF cond_expr expr            { ExpIf ($2, $3, ExpNop, noloc) }
 ;
 
 %%

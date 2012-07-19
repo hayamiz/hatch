@@ -557,6 +557,76 @@ let test_parser_block_expr _ =
 
   ()
 
+let test_parser_if_expr _ =
+  assert_eq_egg_expr
+	(ExpIf (ExpLiteral (LitIdent "a", noloc),
+			ExpLiteral (LitIdent "b", noloc),
+			ExpNop,
+			noloc))
+	"if a { b }";
+
+  assert_eq_egg_expr
+	(ExpIf (ExpLiteral (LitIdent "a", noloc),
+			ExpLiteral (LitIdent "b", noloc),
+			ExpNop,
+			noloc))
+	"if a b";
+
+  assert_eq_egg_expr
+	(ExpIf (ExpLiteral (LitIdent "a", noloc),
+			ExpSeq ([ExpLiteral (LitIdent "b", noloc);
+					 ExpLiteral (LitIdent "c", noloc);],
+					noloc),
+			ExpNop,
+			noloc))
+	"if a { b; c }";
+
+  assert_eq_egg_expr
+	(ExpIf (ExpLiteral (LitIdent "a", noloc),
+			ExpLiteral (LitIdent "b", noloc),
+			ExpLiteral (LitIdent "c", noloc),
+			noloc))
+	"if a { b } else { c }";
+
+  assert_eq_egg_expr
+	(ExpIf (ExpLiteral (LitIdent "a", noloc),
+			ExpLiteral (LitIdent "b", noloc),
+			ExpIf (ExpLiteral (LitIdent "c", noloc),
+				   ExpLiteral (LitIdent "d", noloc),
+				   ExpLiteral (LitIdent "f", noloc),
+				   noloc),
+			noloc))
+	"if a { b } else if c { d } else f";
+
+  assert_eq_egg_expr
+	(ExpIf (parse_string "1+2 == 3",
+			ExpLiteral (LitIdent "b", noloc),
+			ExpNop,
+			noloc))
+	"if 1+2 == 3 { b }";
+
+  assert_eq_egg_expr
+	(ExpIf (parse_string "1+2 == 3",
+			ExpLiteral (LitIdent "b", noloc),
+			ExpIf (ExpLiteral (LitIdent "c", noloc),
+				   ExpLiteral (LitIdent "d", noloc),
+				   ExpLiteral (LitIdent "f", noloc),
+				   noloc),
+			noloc))
+	"if 1+2 == 3 { b } else if c { d } else f";
+
+  assert_eq_egg_expr
+	(ExpIf (parse_string "1+2 == 3",
+			ExpLiteral (LitIdent "b", noloc),
+			ExpIf (ExpLiteral (LitIdent "c", noloc),
+				   ExpLiteral (LitIdent "d", noloc),
+				   ExpLiteral (LitIdent "f", noloc),
+				   noloc),
+			noloc))
+	"if (1+2 == 3) { b } else if c { d } else f";
+
+  ()
+
 
 let _ = add_suites begin "Parser" >::: [
   "parser_lit_id" >:: test_parser_lit_id;
@@ -579,6 +649,7 @@ let _ = add_suites begin "Parser" >::: [
   "parser_infix_logi_comp_expr" >:: test_parser_infix_logi_comp_expr;
   "parser_compound_expr" >:: test_parser_compound_expr;
   "parser_block_expr" >:: test_parser_block_expr;
+  "parser_if_expr" >:: test_parser_if_expr;
 ] end
 
 
