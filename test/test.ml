@@ -25,6 +25,9 @@ let test_string_of_token _ =
   assert_equal ~printer:id "TRUE" (ParserUtil.string_of_token (TRUE noloc));
   assert_equal ~printer:id "FALSE" (ParserUtil.string_of_token (FALSE noloc));
   assert_equal ~printer:id "UNDEF" (ParserUtil.string_of_token (UNDEF noloc));
+  assert_equal ~printer:id "LAND" (ParserUtil.string_of_token (LAND noloc));
+  assert_equal ~printer:id "LOR" (ParserUtil.string_of_token (LOR noloc));
+  assert_equal ~printer:id "LNOT" (ParserUtil.string_of_token (LNOT noloc));
   ()
 
 let test_string_of_tokens _ =
@@ -122,6 +125,12 @@ let test_lex_undef_lit _ =
   assert_eq_tokens [UNDEF noloc] (tokens_from_string "undefined");
   ()
 
+let test_lex_logical_op _ =
+  assert_eq_tokens [LAND noloc] (tokens_from_string "&&");
+  assert_eq_tokens [LOR noloc] (tokens_from_string "||");
+  assert_eq_tokens [LNOT noloc] (tokens_from_string "!");
+  ()
+
 let test_simple_arith_exp _ =
   assert_eq_tokens [INT (1, noloc); PLUS  noloc; INT (1, noloc)] (tokens_from_string "1+1");
   assert_eq_tokens [INT (1, noloc); MINUS noloc; INT (2, noloc)] (tokens_from_string "1 - 2");
@@ -169,6 +178,7 @@ let _ = add_suites begin "Lexer" >::: [
   "lex_string_lit" >:: test_lex_string_lit;
   "lex_bool_lit" >:: test_lex_bool_lit;
   "ex_undef_lit" >:: test_lex_undef_lit;
+  "lex_logical_op" >:: test_lex_logical_op;
   "simple arithmetic exp" >:: test_simple_arith_exp;
   "arithmetic exp" >:: test_arith_exp;
   "comp_exp" >:: test_comp_exp;
@@ -290,6 +300,41 @@ let test_parser_bind_expr _ =
 
   ()
 
+let test_parser_infix_expr _ =
+  assert_eq_egg_expr
+	(ExpInfix (InfixPlus, ExpLiteral (LitInt 1, noloc), ExpLiteral (LitInt 2, noloc), noloc))
+	(parse_string "1 + 2");
+
+  assert_eq_egg_expr
+	(ExpInfix (InfixMinus, ExpLiteral (LitInt 1, noloc), ExpLiteral (LitInt 2, noloc), noloc))
+	(parse_string "1 - 2");
+
+  assert_eq_egg_expr
+	(ExpInfix (InfixMul, ExpLiteral (LitInt 3, noloc), ExpLiteral (LitInt 2, noloc), noloc))
+	(parse_string "3 * 2");
+  
+  assert_eq_egg_expr
+	(ExpInfix (InfixDiv, ExpLiteral (LitInt 3, noloc), ExpLiteral (LitFloat 2.0, noloc), noloc))
+	(parse_string "3 / 2.0");
+  
+  assert_eq_egg_expr
+	(ExpInfix (InfixMinus, (ExpInfix (InfixPlus, ExpLiteral (LitInt 1, noloc), ExpLiteral (LitInt 2, noloc), noloc)), ExpLiteral (LitInt 3, noloc), noloc))
+	(parse_string "1 + 2 - 3");
+  ()
+
+let test_parser_infix_expr_mul_div _ =
+  assert_eq_egg_expr
+	(ExpInfix (InfixMinus,
+			   ExpLiteral (LitInt 1, noloc),
+			   (ExpInfix (InfixMul, ExpLiteral (LitInt 2, noloc), ExpLiteral (LitInt 3, noloc), noloc)),
+			   noloc))
+	(parse_string "1 - 2 * 3");
+  
+  assert_eq_egg_expr
+	(ExpInfix (InfixMinus, (ExpInfix (InfixPlus, ExpLiteral (LitInt 1, noloc), ExpLiteral (LitInt 2, noloc), noloc)), ExpLiteral (LitInt 3, noloc), noloc))
+	(parse_string "1 + 2 - 3");
+  ()
+
 let test_parser_compound_expr _ =
   assert_eq_egg_expr
 	(ExpSeq ([ExpLiteral (LitIdent "a", noloc);
@@ -320,6 +365,8 @@ let _ = add_suites begin "Parser" >::: [
   "parser_closure_expr" >:: test_parser_closure_expr;
   "parser_apply_expr" >:: test_parser_apply_expr;
   "parser_bind_expr" >:: test_parser_bind_expr;
+  "parser_infix_expr" >:: test_parser_infix_expr;
+  "parser_infix_expr_mul_div" >:: test_parser_infix_expr_mul_div;
   "parser_compound_expr" >:: test_parser_compound_expr;
   "parser_block_expr" >:: test_parser_block_expr;
 ] end

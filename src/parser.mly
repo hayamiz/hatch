@@ -45,6 +45,7 @@
 %token <Tree.location> COMMA SEMICOLON DOT
 %token <Tree.location> PLUS MINUS MUL DIV
 %token <Tree.location> EQ LEQ GEQ LE GE
+%token <Tree.location> LAND LOR LNOT
 %token <Tree.location> LAMBDA
 %token <Tree.location> IF ELSEIF ELSE
 %token <Tree.location> BIND RARROW
@@ -72,6 +73,7 @@ expr:
   | closure_expr      { $1 }
   | apply_expr        { $1 }
   | bind_expr         { $1 }
+  | infix_expr        { $1 }
   | block_expr        { $1 }
 
 primary_expr:
@@ -90,6 +92,12 @@ apply_expr:
 
 bind_expr:
     BIND IDENT RARROW expr   { let (id,_) = $2 in ExpBind (id, $4, noloc) }
+
+infix_expr:
+    expr PLUS expr            { ExpInfix (InfixPlus, $1, $3, noloc) }
+  | expr MINUS expr           { ExpInfix (InfixMinus, $1, $3, noloc) }
+  | expr MUL expr             { ExpInfix (InfixMul, $1, $3, noloc) }
+  | expr DIV expr             { ExpInfix (InfixDiv, $1, $3, noloc) }
 
 param_list:
     IDENT COMMA param_list   { let (id,_) = $1 in id :: $3 }

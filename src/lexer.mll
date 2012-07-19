@@ -52,4 +52,7 @@ rule token = parse
   | '<'            { LE noloc }
   | '>'            { GE noloc }
   | '='            { EQ noloc }
+  | "&&"           { LAND noloc }
+  | "||"           { LOR noloc }
+  | '!'            { LNOT noloc }
   | eof            { EOF noloc }

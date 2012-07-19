@@ -21,6 +21,9 @@ let string_of_token tok =
 	| MINUS noloc -> "MINUS"
 	| MUL noloc -> "MUL"
 	| DIV noloc -> "DIV"
+	| LAND noloc -> "LAND"
+	| LOR  noloc -> "LOR"
+	| LNOT noloc -> "LNOT"
 	| LPAREN noloc -> "LPAREN"
 	| RPAREN noloc -> "RPAREN"
 	| LBRAKET noloc -> "LBRAKET"
@@ -66,6 +69,13 @@ let string_of_literal lit =
 	| LitUndef -> "Undef"
 ;;
 
+let string_of_infix_oper op =
+  match op with
+	  InfixPlus -> "+"
+	| InfixMinus -> "-"
+	| InfixMul -> "*"
+	| InfixDiv -> "/"
+
 let rec string_of_expr e =
   match e with
 	  ExpLiteral (lit, loc) -> "Literal (" ^ (string_of_literal lit) ^ ")"
@@ -74,6 +84,7 @@ let rec string_of_expr e =
 	| ExpApply (f, args, _) ->
 		"Apply " ^ (string_of_expr f) ^ "(" ^ (String.concat "," (List.map string_of_expr args)) ^ ")"
 	| ExpBind (id, e, _) -> "Bind " ^ id ^ " -> " ^ (string_of_expr e)
+	| ExpInfix (op, e1, e2, _) -> "(" ^ (string_of_expr e1) ^ (string_of_infix_oper op) ^ (string_of_expr e2)  ^ ")"
 	| ExpSeq (es, _) ->
 		"Seq (" ^ (String.concat "; " (List.map string_of_expr es)) ^ ")"
 	| _ -> raise (Failure "string_of_expr not implemented")
