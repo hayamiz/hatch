@@ -692,6 +692,59 @@ let _ = add_suites begin "Parser" >::: [
 
 
 
+(* test of semantic.ml *)
+open Semantic
+
+let assert_sem_type typ exp_str =
+  assert_equal typ (Semantic.solve_type (parse_string exp_str))
+	~msg:("Solving type of expr: " ^ exp_str)
+
+let test_sem_solve_type _ =
+  assert_sem_type TypUnsolved "foo";
+  assert_sem_type TypUnsolved "1 + foo";
+  assert_sem_type TypUnsolved "undefined";
+
+  assert_sem_type TypInt "1";
+  assert_sem_type TypInt "-1";
+  assert_sem_type TypInt "+2";
+  assert_sem_type TypInt "1 + 2";
+  assert_sem_type TypInt "1 + 2 * 3 - 4";
+  assert_sem_type TypInt "1 + 2 * (3 - 4) / 5";
+
+  assert_sem_type TypFloat "1.0";
+  assert_sem_type TypFloat "1.0e2";
+  assert_sem_type TypFloat "1.0e2 + 2.0";
+  assert_sem_type TypFloat "1.0e2 + 1";
+  assert_sem_type TypFloat "3 * 1.0e2";
+  assert_sem_type TypFloat "(3 * 1.0e2)";
+
+  assert_sem_type TypString "\"hoge\"";
+  assert_sem_type TypString "\"hoge\" + \"foo\"";
+  assert_sem_type TypString "\"hoge\" * 3";
+
+  assert_sem_type TypBool "true";
+  assert_sem_type TypBool "false";
+  assert_sem_type TypBool "! false";
+  assert_sem_type TypBool "! 1";
+
+  assert_sem_type TypInt "1 < 2";
+  assert_sem_type TypInt "1 = 2";
+  assert_sem_type TypInt "1 >= 2";
+
+  assert_sem_type TypFloat "1.0 < 2.0";
+
+  assert_sem_type TypBool "\"foo\" = \"bar\"";
+
+  assert_sem_type TypClosure "lambda (a) { b }";
+
+  ()
+
+
+let _ = add_suites begin "Semantic" >::: [
+  "sem_solve_type" >:: test_sem_solve_type;
+] end
+
+
 let _ =
   List.iter
 	(fun suite ->

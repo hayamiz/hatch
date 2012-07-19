@@ -52,6 +52,7 @@ FILES[] =
     lexer
     parser
     parserUtil
+    semantic
     main
 
 PROGRAM = hatch
