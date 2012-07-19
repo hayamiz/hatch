@@ -47,11 +47,11 @@ rule token = parse
   | '-'            { MINUS noloc }
   | '*'            { MUL noloc }
   | '/'            { DIV noloc }
-  | "<="           { LEQ noloc }
-  | ">="           { GEQ noloc }
-  | '<'            { LE noloc }
-  | '>'            { GE noloc }
-  | '='            { EQ noloc }
+  | "<="           { LE noloc }
+  | ">="           { GE noloc }
+  | '<'            { LT noloc }
+  | '>'            { GT noloc }
+  | '=' '='?       { EQ noloc }
   | "&&"           { LAND noloc }
   | "||"           { LOR noloc }
   | '!'            { LNOT noloc }

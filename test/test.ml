@@ -148,10 +148,12 @@ let test_arith_exp _ =
   ()
 
 let test_comp_exp _ =
-  assert_eq_tokens [INT (1, noloc); LE  noloc; INT (2, noloc)] (tokens_from_string "1<2");
-  assert_eq_tokens [INT (1, noloc); GE  noloc; INT (2, noloc)] (tokens_from_string "1 > 2");
-  assert_eq_tokens [INT (1, noloc); LEQ noloc; INT (2, noloc)] (tokens_from_string "1 <= 2");
-  assert_eq_tokens [INT (1, noloc); GEQ noloc; INT (2, noloc)] (tokens_from_string "1 >= 2");
+  assert_eq_tokens [INT (1, noloc); EQ noloc; INT (2, noloc)] (tokens_from_string "1=2");
+  assert_eq_tokens [INT (1, noloc); EQ noloc; INT (2, noloc)] (tokens_from_string "1==2");
+  assert_eq_tokens [INT (1, noloc); LT noloc; INT (2, noloc)] (tokens_from_string "1<2");
+  assert_eq_tokens [INT (1, noloc); GT noloc; INT (2, noloc)] (tokens_from_string "1 > 2");
+  assert_eq_tokens [INT (1, noloc); LE noloc; INT (2, noloc)] (tokens_from_string "1 <= 2");
+  assert_eq_tokens [INT (1, noloc); GE noloc; INT (2, noloc)] (tokens_from_string "1 >= 2");
   ()
 
 let test_delim_exp _ =
@@ -194,61 +196,68 @@ let parse_string str =
   let lexbuf = Lexing.from_string str in
 	Parser.main Lexer.token lexbuf
 
-let assert_eq_egg_expr expected actual =
-  assert_equal ~printer:id (string_of_expr expected) (string_of_expr actual)
+let assert_eq_egg_expr expected exp_str =
+  try
+	let tree = parse_string exp_str
+  in
+	assert_equal ~printer:id ~msg:("parsing: " ^ exp_str)
+	  (string_of_expr expected)
+	  (string_of_expr tree)
+  with Parsing.Parse_error ->
+	print_string ("Parse error: " ^ exp_str ^ "\n")
 
 let test_parser_lit_id _ =
   assert_eq_egg_expr
 	(ExpLiteral (LitIdent "hoge", noloc))
-	(parse_string "hoge");
+	("hoge");
   ()
 
 let test_parser_lit_int _ =
   assert_eq_egg_expr
 	(ExpLiteral (LitInt 1, noloc))
-	(parse_string "1");
+	("1");
   ()
 
 let test_parser_lit_float _ =
   assert_eq_egg_expr
 	(ExpLiteral (LitFloat 2.3, noloc))
-	(parse_string "2.3");
+	("2.3");
 
   ()
 
 let test_parser_lit_string _ =
   assert_eq_egg_expr
 	(ExpLiteral (LitString "hoge", noloc))
-	(parse_string "\"hoge\"");
+	("\"hoge\"");
 
   assert_eq_egg_expr
 	(ExpLiteral (LitString "ho\"ge", noloc))
-	(parse_string "\"ho\\\"ge\"");
+	("\"ho\\\"ge\"");
 
   ()
 
 let test_parser_lit_bool _ =
   assert_eq_egg_expr
 	(ExpLiteral (LitBool true, noloc))
-	(parse_string "true");
+	("true");
 
   assert_eq_egg_expr
 	(ExpLiteral (LitBool false, noloc))
-	(parse_string "false");
+	("false");
 
   ()
 
 let test_parser_lit_undef _ =
   assert_eq_egg_expr
 	(ExpLiteral (LitUndef, noloc))
-	(parse_string "undefined");
+	("undefined");
 
   ()
 
 let test_parser_primary_expr _ =
   assert_eq_egg_expr
 	(ExpLiteral (LitInt 1, noloc))
-	(parse_string "(1)");
+	("(1)");
 
   ()
 
@@ -257,11 +266,11 @@ let test_parser_closure_expr _ =
 	(ExpClosure (["a"; "b"],
 				 ExpSeq ([ExpLiteral (LitIdent "a", noloc);
 						  ExpLiteral (LitIdent "b", noloc)], noloc), noloc))
-	(parse_string "lambda (a, b) { a; b }");
+	("lambda (a, b) { a; b }");
 
   assert_eq_egg_expr
 	(ExpClosure (["a"], ExpLiteral (LitIdent "a", noloc), noloc))
-	(parse_string "lambda (a) { a }");
+	("lambda (a) { a }");
   ()
 
 let test_parser_apply_expr _ =
@@ -269,13 +278,13 @@ let test_parser_apply_expr _ =
 	(ExpApply (ExpLiteral (LitIdent "a", noloc),
 			   [],
 			   noloc))
-	(parse_string "a()");
+	("a()");
 
   assert_eq_egg_expr
 	(ExpApply (ExpLiteral (LitIdent "a", noloc),
 			   [ExpLiteral (LitInt 1, noloc); ExpLiteral (LitInt 3, noloc); ExpLiteral (LitInt 4, noloc)],
 			   noloc))
-	(parse_string "a(1,3,4)");
+	("a(1,3,4)");
 
   ()
 
@@ -286,7 +295,7 @@ let test_parser_bind_expr _ =
 
   assert_eq_egg_expr
 	(ExpBind ("foo", ExpLiteral (LitInt 1, noloc), noloc))
-	(parse_string "bind foo -> 1");
+	("bind foo -> 1");
 
   assert_eq_egg_expr
 	(ExpBind ("foo",
@@ -296,43 +305,238 @@ let test_parser_bind_expr _ =
 								  ExpLiteral (LitIdent "c", noloc)], noloc),
 						 noloc),
 			  noloc))
-	(parse_string "bind foo -> lambda (a,b,c) { a; b; c }");
+	("bind foo -> lambda (a,b,c) { a; b; c }");
+
+  ()
+
+let test_parser_prefix_expr _ =
+  assert_eq_egg_expr
+	(ExpPrefix (PrefixPlus, ExpLiteral (LitInt 1, noloc), noloc))
+	("+1");
+
+  assert_eq_egg_expr
+	(ExpPrefix (PrefixMinus, ExpLiteral (LitInt 2, noloc), noloc))
+	("-2");
+
+  assert_eq_egg_expr
+	(ExpPrefix (PrefixLnot, ExpLiteral (LitBool true, noloc), noloc))
+	("! true");
+
+  assert_eq_egg_expr
+	(ExpPrefix (PrefixPlus, ExpLiteral (LitInt 1, noloc), noloc))
+	("+ (1)");
 
   ()
 
 let test_parser_infix_expr _ =
   assert_eq_egg_expr
 	(ExpInfix (InfixPlus, ExpLiteral (LitInt 1, noloc), ExpLiteral (LitInt 2, noloc), noloc))
-	(parse_string "1 + 2");
+	("1 + 2");
 
   assert_eq_egg_expr
 	(ExpInfix (InfixMinus, ExpLiteral (LitInt 1, noloc), ExpLiteral (LitInt 2, noloc), noloc))
-	(parse_string "1 - 2");
+	("1 - 2");
 
   assert_eq_egg_expr
 	(ExpInfix (InfixMul, ExpLiteral (LitInt 3, noloc), ExpLiteral (LitInt 2, noloc), noloc))
-	(parse_string "3 * 2");
+	("3 * 2");
   
   assert_eq_egg_expr
 	(ExpInfix (InfixDiv, ExpLiteral (LitInt 3, noloc), ExpLiteral (LitFloat 2.0, noloc), noloc))
-	(parse_string "3 / 2.0");
+	("3 / 2.0");
   
   assert_eq_egg_expr
 	(ExpInfix (InfixMinus, (ExpInfix (InfixPlus, ExpLiteral (LitInt 1, noloc), ExpLiteral (LitInt 2, noloc), noloc)), ExpLiteral (LitInt 3, noloc), noloc))
-	(parse_string "1 + 2 - 3");
+	("1 + 2 - 3");
+
+  assert_eq_egg_expr
+	(ExpInfix (InfixMinus,
+			   (ExpInfix (InfixMinus,
+						  ExpLiteral (LitInt 1, noloc),
+						  ExpLiteral (LitInt 2, noloc), noloc)),
+			   ExpLiteral (LitInt 3, noloc), noloc))
+	("1 - 2 - 3");
+
+  assert_eq_egg_expr
+	(ExpInfix (InfixMinus,
+		  ExpInfix (InfixPlus,
+						  ExpLiteral (LitInt 1, noloc),
+						  ExpLiteral (LitInt 2, noloc), noloc),
+		  ExpInfix (InfixMul,
+					ExpInfix (InfixDiv,
+							  ExpLiteral (LitInt 3, noloc),
+							  ExpLiteral (LitInt 4, noloc), noloc),
+					ExpInfix (InfixPlus,
+							  ExpLiteral (LitInt 5, noloc),
+							  ExpLiteral (LitInt 6, noloc), noloc),
+					noloc),
+		  noloc))
+	("1 + 2 - 3 / 4 * (5 + 6)");
+
+  assert_eq_egg_expr
+	(ExpInfix (InfixPlus,
+			   ExpLiteral (LitInt 1, noloc),
+			   (parse_string "foo(2,3)"), noloc))
+	("1 + foo(2,3)");
+
   ()
 
 let test_parser_infix_expr_mul_div _ =
   assert_eq_egg_expr
-	(ExpInfix (InfixMinus,
+	(ExpInfix (InfixMul,
 			   ExpLiteral (LitInt 1, noloc),
-			   (ExpInfix (InfixMul, ExpLiteral (LitInt 2, noloc), ExpLiteral (LitInt 3, noloc), noloc)),
+			   ExpLiteral (LitInt 2, noloc), noloc))
+	("1 * 2");
+
+  assert_eq_egg_expr
+	(ExpInfix (InfixMinus,
+			   (ExpInfix (InfixMinus,
+						  ExpLiteral (LitInt 1, noloc),
+						  (ExpInfix (InfixMul,
+									 ExpLiteral (LitInt 2, noloc),
+									 ExpLiteral (LitInt 3, noloc), noloc)),
+						  noloc)),
+			   ExpLiteral (LitInt 4, noloc),
 			   noloc))
-	(parse_string "1 - 2 * 3");
-  
+	("1 - 2 * 3 - 4");
+
   assert_eq_egg_expr
 	(ExpInfix (InfixMinus, (ExpInfix (InfixPlus, ExpLiteral (LitInt 1, noloc), ExpLiteral (LitInt 2, noloc), noloc)), ExpLiteral (LitInt 3, noloc), noloc))
-	(parse_string "1 + 2 - 3");
+	("1 + 2 - 3");
+  ()
+
+let test_parser_infix_comp_expr _ =
+  assert_eq_egg_expr
+	(ExpInfix (InfixEq,
+			   ExpLiteral (LitInt 1, noloc),
+			   ExpLiteral (LitInt 2, noloc), noloc))
+	("1 = 2");
+
+  assert_eq_egg_expr
+	(ExpInfix (InfixEq,
+			   ExpLiteral (LitInt 1, noloc),
+			   ExpLiteral (LitInt 2, noloc), noloc))
+	("1 == 2");
+
+  assert_eq_egg_expr
+	(ExpInfix (InfixLt,
+			   ExpLiteral (LitInt 1, noloc),
+			   ExpLiteral (LitInt 2, noloc), noloc))
+	("1 < 2");
+
+  assert_eq_egg_expr
+	(ExpInfix (InfixGt,
+			   ExpLiteral (LitInt 1, noloc),
+			   ExpLiteral (LitInt 2, noloc), noloc))
+	("1 > 2");
+
+  assert_eq_egg_expr
+	(ExpInfix (InfixLe,
+			   ExpLiteral (LitInt 1, noloc),
+			   ExpLiteral (LitInt 2, noloc), noloc))
+	("1 <= 2");
+
+  assert_eq_egg_expr
+	(ExpInfix (InfixGe,
+			   ExpLiteral (LitInt 1, noloc),
+			   ExpLiteral (LitInt 2, noloc), noloc))
+	("1 >= 2");
+
+  assert_eq_egg_expr
+	(ExpInfix (InfixLt,
+			   (ExpInfix (InfixLt,
+						  ExpLiteral (LitInt 1, noloc),
+						  ExpLiteral (LitInt 2, noloc), noloc)),
+			   ExpLiteral (LitInt 3, noloc),
+			   noloc))
+	("1 < 2 < 3");
+
+  ()
+
+let test_parser_infix_comp_arith_expr _ =
+  assert_eq_egg_expr
+	(ExpInfix (InfixEq,
+			   (parse_string "1+2"),
+			   (parse_string "-2"), noloc))
+	("1+2 = -2");
+
+  assert_eq_egg_expr
+	(ExpInfix (InfixLt,
+			   (parse_string "1+2"),
+			   (parse_string "-2"), noloc))
+	("1+2 < -2");
+
+  assert_eq_egg_expr
+	(ExpInfix (InfixGt,
+			   (parse_string "3+4"),
+			   (parse_string "5*6"), noloc))
+	("3+4 > 5*6");
+
+  assert_eq_egg_expr
+	(ExpInfix (InfixLe,
+			   (parse_string "3+ -4"),
+			   (parse_string "5/6"), noloc))
+	("3+ -4 <= 5/6");
+
+  ()
+
+let test_parser_infix_logi_expr _ =
+  assert_eq_egg_expr
+	(ExpInfix (InfixLand,
+			   ExpLiteral (LitBool true, noloc),
+			   ExpLiteral (LitBool false, noloc), noloc))
+	("true && false");
+
+  assert_eq_egg_expr
+	(ExpInfix (InfixLor,
+			   ExpLiteral (LitBool true, noloc),
+			   ExpLiteral (LitBool false, noloc), noloc))
+	("true || false");
+
+  assert_eq_egg_expr
+	(ExpInfix (InfixLand,
+			   (ExpInfix (InfixLand,
+						  ExpLiteral (LitInt 1, noloc),
+						  ExpLiteral (LitInt 2, noloc), noloc)),
+			   ExpLiteral (LitBool false, noloc),
+			   noloc))
+	("1 && 2 && false");
+
+  ()
+
+let test_parser_infix_logi_comp_expr _ =
+  assert_eq_egg_expr
+	(ExpInfix (InfixLand,
+			   (parse_string "1 < 2"),
+			   (parse_string "2 > 3"), noloc))
+	("1 < 2 && 2 > 3");
+
+  assert_eq_egg_expr
+	(ExpInfix (InfixLand,
+			   (parse_string "1+2 < 3*4"),
+			   (parse_string "5/6 > -7"), noloc))
+	("1+2 < 3*4 && 5/6 > -7");
+
+  ()
+
+let test_parser_prefix_infix_expr _ =
+  assert_eq_egg_expr
+	(ExpInfix (InfixPlus,
+			   ExpPrefix (PrefixPlus, ExpLiteral (LitInt 1, noloc), noloc),
+			   ExpPrefix (PrefixMinus, ExpLiteral (LitInt 2, noloc), noloc),
+			   noloc))
+	("+1 + -2");
+
+  assert_eq_egg_expr
+	(ExpInfix (InfixPlus,
+			   ExpLiteral (LitInt 3, noloc),
+			   ExpInfix (InfixMul,
+						 ExpPrefix (PrefixMinus, ExpLiteral (LitInt 4, noloc), noloc),
+						 ExpPrefix (PrefixMinus, ExpLiteral (LitInt 2, noloc), noloc),
+						 noloc),
+			   noloc))
+	("3 + -4 * -2");
+
   ()
 
 let test_parser_compound_expr _ =
@@ -340,7 +544,7 @@ let test_parser_compound_expr _ =
 	(ExpSeq ([ExpLiteral (LitIdent "a", noloc);
 			  ExpLiteral (LitIdent "b", noloc);
 			  ExpLiteral (LitInt   1, noloc)], noloc))
-	(parse_string "a;b; 1");
+	("a;b; 1");
 
   ()
 
@@ -349,7 +553,7 @@ let test_parser_block_expr _ =
 	(ExpSeq ([ExpLiteral (LitIdent "a", noloc);
 			  ExpLiteral (LitIdent "b", noloc);
 			  ExpLiteral (LitInt   1, noloc)], noloc))
-	(parse_string "{ a;b; 1}");
+	("{ a;b; 1}");
 
   ()
 
@@ -365,8 +569,14 @@ let _ = add_suites begin "Parser" >::: [
   "parser_closure_expr" >:: test_parser_closure_expr;
   "parser_apply_expr" >:: test_parser_apply_expr;
   "parser_bind_expr" >:: test_parser_bind_expr;
+  "parser_prefix_expr" >:: test_parser_prefix_expr;
   "parser_infix_expr" >:: test_parser_infix_expr;
   "parser_infix_expr_mul_div" >:: test_parser_infix_expr_mul_div;
+  "parser_prefix_infix_expr" >:: test_parser_prefix_infix_expr;
+  "parser_infix_comp_expr" >:: test_parser_infix_comp_expr;
+  "parser_infix_comp_arith_expr" >:: test_parser_infix_comp_arith_expr;
+  "parser_infix_logi_expr" >:: test_parser_infix_logi_expr;
+  "parser_infix_logi_comp_expr" >:: test_parser_infix_logi_comp_expr;
   "parser_compound_expr" >:: test_parser_compound_expr;
   "parser_block_expr" >:: test_parser_block_expr;
 ] end

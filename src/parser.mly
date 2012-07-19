@@ -44,15 +44,17 @@
 %token <Tree.location> LBRACE RBRACE
 %token <Tree.location> COMMA SEMICOLON DOT
 %token <Tree.location> PLUS MINUS MUL DIV
-%token <Tree.location> EQ LEQ GEQ LE GE
+%token <Tree.location> EQ LE GE LT GT
 %token <Tree.location> LAND LOR LNOT
 %token <Tree.location> LAMBDA
 %token <Tree.location> IF ELSEIF ELSE
 %token <Tree.location> BIND RARROW
 %token <Tree.location> EOF
-%left PLUS MINUS        /* lowest precedence */
-%left TIMES DIV         /* medium precedence */
-%nonassoc UMINUS        /* highest precedence */
+%left LAND LOR          /* 5th precedence */
+%left EQ LE GE LT GT    /* 4th precedence */
+%left PLUS MINUS        /* 3rd precedence */
+%left MUL DIV           /* 2nd precedence */
+%nonassoc UPLUS UMINUS  /* highest precedence */
 %start main             /* the entry point */
 %type <Tree.egg_expr> main
 %%
@@ -78,6 +80,7 @@ expr:
 
 primary_expr:
     literal             { $1 }
+  | apply_expr          { $1 }
   | LPAREN expr RPAREN  { $2 }
 
 closure_expr:
@@ -93,11 +96,25 @@ apply_expr:
 bind_expr:
     BIND IDENT RARROW expr   { let (id,_) = $2 in ExpBind (id, $4, noloc) }
 
+prefix_expr:
+    primary_expr                    { $1 }
+  | PLUS  primary_expr %prec UPLUS  { ExpPrefix (PrefixPlus,  $2, noloc) }
+  | MINUS primary_expr %prec UMINUS { ExpPrefix (PrefixMinus, $2, noloc) }
+  | LNOT  primary_expr              { ExpPrefix (PrefixLnot,  $2, noloc) }
+
 infix_expr:
-    expr PLUS expr            { ExpInfix (InfixPlus, $1, $3, noloc) }
-  | expr MINUS expr           { ExpInfix (InfixMinus, $1, $3, noloc) }
-  | expr MUL expr             { ExpInfix (InfixMul, $1, $3, noloc) }
-  | expr DIV expr             { ExpInfix (InfixDiv, $1, $3, noloc) }
+    prefix_expr                    { $1 }
+  | infix_expr PLUS  infix_expr  { ExpInfix (InfixPlus,  $1, $3, noloc) }
+  | infix_expr MINUS infix_expr  { ExpInfix (InfixMinus, $1, $3, noloc) }
+  | infix_expr MUL   infix_expr  { ExpInfix (InfixMul,   $1, $3, noloc) }
+  | infix_expr DIV   infix_expr  { ExpInfix (InfixDiv,   $1, $3, noloc) }
+  | infix_expr EQ    infix_expr  { ExpInfix (InfixEq,    $1, $3, noloc) }
+  | infix_expr LE    infix_expr  { ExpInfix (InfixLe,    $1, $3, noloc) }
+  | infix_expr GE    infix_expr  { ExpInfix (InfixGe,    $1, $3, noloc) }
+  | infix_expr LT    infix_expr  { ExpInfix (InfixLt,    $1, $3, noloc) }
+  | infix_expr GT    infix_expr  { ExpInfix (InfixGt,    $1, $3, noloc) }
+  | infix_expr LAND  infix_expr  { ExpInfix (InfixLand,  $1, $3, noloc) }
+  | infix_expr LOR   infix_expr  { ExpInfix (InfixLor,   $1, $3, noloc) }
 
 param_list:
     IDENT COMMA param_list   { let (id,_) = $1 in id :: $3 }

@@ -34,10 +34,10 @@ let string_of_token tok =
 	| SEMICOLON noloc -> "SEMICOLON"
 	| DOT noloc -> "DOT"
 	| EQ noloc -> "EQ"
-	| LEQ noloc -> "LEQ"
-	| GEQ noloc -> "GEQ"
 	| LE noloc -> "LE"
 	| GE noloc -> "GE"
+	| LT noloc -> "LT"
+	| GT noloc -> "GT"
 	| IDENT (id, noloc) -> "IDENT \"" ^ id ^ "\""
 	| LAMBDA _ -> "LAMBDA"
 	| IF _ -> "IF"
@@ -69,24 +69,48 @@ let string_of_literal lit =
 	| LitUndef -> "Undef"
 ;;
 
+let string_of_prefix_oper op =
+  match op with
+	  PrefixPlus -> "+"
+	| PrefixMinus -> "-"
+	| PrefixLnot -> "!"
+
 let string_of_infix_oper op =
   match op with
 	  InfixPlus -> "+"
 	| InfixMinus -> "-"
 	| InfixMul -> "*"
 	| InfixDiv -> "/"
+	| InfixEq -> "="
+	| InfixLe -> "<="
+	| InfixGe -> ">="
+	| InfixLt -> "<"
+	| InfixGt -> ">"
+	| InfixLand -> "&&"
+	| InfixLor -> "||"
 
-let rec string_of_expr e =
+let rec string_of_expr ?(indent = 0) e =
+  let is = String.make indent ' '
+  in
   match e with
-	  ExpLiteral (lit, loc) -> "Literal (" ^ (string_of_literal lit) ^ ")"
+	  ExpLiteral (lit, loc) -> is ^ "Literal " ^ (string_of_literal lit)
 	| ExpClosure (params, body_expr, _) ->
-		"Closure (" ^ (String.concat "," params) ^ ") { " ^ (string_of_expr body_expr) ^ " }"
+		is ^ "Closure (" ^ (String.concat "," params) ^ ") {\n" ^
+		  (string_of_expr body_expr ~indent:(indent+2)) ^ "\n" ^
+		  is ^ "}"
 	| ExpApply (f, args, _) ->
 		"Apply " ^ (string_of_expr f) ^ "(" ^ (String.concat "," (List.map string_of_expr args)) ^ ")"
 	| ExpBind (id, e, _) -> "Bind " ^ id ^ " -> " ^ (string_of_expr e)
-	| ExpInfix (op, e1, e2, _) -> "(" ^ (string_of_expr e1) ^ (string_of_infix_oper op) ^ (string_of_expr e2)  ^ ")"
+	| ExpPrefix (op, e, _) ->
+		is ^ "Prefix: " ^ (string_of_prefix_oper op) ^ "\n" ^
+		  (string_of_expr e ~indent:(indent+2))
+	| ExpInfix (op, e1, e2, _) ->
+		is ^ "Infix: " ^ (string_of_infix_oper op) ^ "\n" ^
+		  (string_of_expr e1 ~indent:(indent+2)) ^ "\n" ^
+		  (string_of_expr e2 ~indent:(indent+2))
 	| ExpSeq (es, _) ->
-		"Seq (" ^ (String.concat "; " (List.map string_of_expr es)) ^ ")"
+		"Seq " ^ "\n" ^
+		  (String.concat "\n" (List.map (fun e -> string_of_expr e ~indent:(indent+2)) es ))
 	| _ -> raise (Failure "string_of_expr not implemented")
 ;;
 
