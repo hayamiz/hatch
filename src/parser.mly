@@ -9,6 +9,14 @@
 		b1 :: b2 :: bs -> ExpLet (b1, (make_let (b2 :: bs) body))
 	  | b :: [] -> ExpLet (b, body)
 	  | [] -> raise (Failure "invalid argument for make_let")
+  ;;
+
+  let make_bind bs =
+	match bs with
+		(id, v) :: [] -> ExpBind (id, v)
+	  | [] -> raise (Failure "invalid argument for make_let")
+	  | _ -> ExpSeq (List.map (fun (id, v) -> ExpBind (id, v)) bs)
+  ;;
 
   let make_comp_expr e se =
 	match se with
@@ -102,7 +110,7 @@ bindings:
   | binding                 { [$1] }
 
 bind_expr:
-    BIND binding  { ExpBind ($2) }
+    BIND bindings  { make_bind ($2) }
 
 let_expr:
     LET bindings IN expr     { make_let $2 $4 }

@@ -1,2 +1,2 @@
 
-type id = string
+type sym = string

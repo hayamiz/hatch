@@ -302,6 +302,11 @@ let test_parser_bind_expr _ =
 								   ExpLiteral (LitIdent "c")])))))
 	("bind foo -> lambda (a,b,c) { a; b; c }");
 
+  assert_eq_egg_expr
+	(ExpSeq [(ExpBind (("foo", ExpLiteral (LitInt 1))));
+			 (ExpBind (("bar", ExpLiteral (LitInt 2))))])
+	("bind foo -> 1, bar -> 2");
+
   ()
 
 let test_parser_let_expr _ =
