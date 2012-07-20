@@ -262,13 +262,13 @@ let test_parser_primary_expr _ =
 
 let test_parser_closure_expr _ =
   assert_eq_egg_expr
-	(ExpClosure (["a"; "b"],
+	(ExpLambda (["a"; "b"],
 				 ExpSeq ([ExpLiteral (LitIdent "a");
 						  ExpLiteral (LitIdent "b")])))
 	("lambda (a, b) { a; b }");
 
   assert_eq_egg_expr
-	(ExpClosure (["a"], ExpLiteral (LitIdent "a")))
+	(ExpLambda (["a"], ExpLiteral (LitIdent "a")))
 	("lambda (a) { a }");
   ()
 
@@ -302,10 +302,10 @@ let test_parser_bind_expr _ =
 
   assert_eq_egg_expr
 	(ExpBind (("foo",
-			   ExpClosure (["a"; "b"; "c"],
-						   ExpSeq ([ExpLiteral (LitIdent "a");
-									ExpLiteral (LitIdent "b");
-									ExpLiteral (LitIdent "c")])))))
+			   ExpLambda (["a"; "b"; "c"],
+						  ExpSeq ([ExpLiteral (LitIdent "a");
+								   ExpLiteral (LitIdent "b");
+								   ExpLiteral (LitIdent "c")])))))
 	("bind foo -> lambda (a,b,c) { a; b; c }");
 
   ()

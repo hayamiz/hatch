@@ -79,7 +79,7 @@ primary_expr:
   | LPAREN expr RPAREN  { $2 }
 
 closure_expr:
-    LAMBDA LPAREN param_list RPAREN expr  { ExpClosure ($3, $5)}
+    LAMBDA LPAREN param_list RPAREN expr  { ExpLambda ($3, $5)}
 
 argument_list:
     expr COMMA argument_list  { $1 :: $3 }

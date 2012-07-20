@@ -96,7 +96,7 @@ let rec string_of_expr ?(indent = 0) e =
   in
   match e with
 	  ExpLiteral (lit) -> is ^ "Literal " ^ (string_of_literal lit)
-	| ExpClosure (params, body_expr) ->
+	| ExpLambda (params, body_expr) ->
 		is ^ "Closure (" ^ (String.concat "," params) ^ ") {\n" ^
 		  (string_of_expr body_expr ~indent:(indent+2)) ^ "\n" ^
 		  is ^ "}"

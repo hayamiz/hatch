@@ -15,7 +15,7 @@ val current_file: string ref
 type egg_expr =
 	ExpNop								(* no op *)
   | ExpLiteral of (egg_literal)
-  | ExpClosure of (string list * egg_expr) (* TODO: fix param list *)
+  | ExpLambda of (string list * egg_expr) (* TODO: fix param list *)
   | ExpApply   of (egg_expr * egg_expr list)
   | ExpBind    of ((string * egg_expr))
   | ExpLet     of ((string * egg_expr) * egg_expr)

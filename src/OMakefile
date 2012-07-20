@@ -48,6 +48,7 @@ OCamlGeneratedFiles(lexer.ml parser.ml)
 #
 
 FILES[] =
+    symbol
     syntax
     lexer
     parser
