@@ -53,9 +53,7 @@ FILES[] =
     lexer
     parser
     parserUtil
-    translator
-    vm
-    vmis
+    normal
     main
 
 PROGRAM = hatch

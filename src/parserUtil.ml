@@ -104,7 +104,7 @@ let rec string_of_expr ?(indent = 0) e =
 	| ExpBind ((id, v)) ->
 		is ^ "Bind: " ^ id ^ " ->\n" ^
 		  (string_of_expr v ~indent:(indent+4)) ^ "\n"
-	| ExpLet ((id, v), body) ->
+	| ExpLet (id, v, body) ->
 		is ^ "Let" ^ "\n" ^
 		  is ^ "  " ^ id ^ " ->\n" ^
 		  (string_of_expr v ~indent:(indent+4)) ^ "\n" ^

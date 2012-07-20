@@ -315,19 +315,19 @@ let test_parser_let_expr _ =
 	(tokens_from_string "let foo -> 1 in 2");
 
   assert_eq_egg_expr
-	(ExpLet (("foo", ExpLiteral (LitString "bar")),
+	(ExpLet ("foo", ExpLiteral (LitString "bar"),
 			 ExpLiteral (LitIdent "c")))
 	("let foo -> \"bar\" in c");
 
   assert_eq_egg_expr
-	(ExpLet (("foo", ExpLiteral (LitString "bar")),
-			 ExpLet (("hoge", ExpLiteral (LitInt 1)),
+	(ExpLet ("foo", ExpLiteral (LitString "bar"),
+			 ExpLet ("hoge", ExpLiteral (LitInt 1),
 					 ExpLiteral (LitIdent "c"))))
 	("let foo -> \"bar\", hoge -> 1 in c");
 
   assert_eq_egg_expr
-	(ExpLet (("foo", ExpLiteral (LitString "bar")),
-			 ExpLet (("hoge", ExpLiteral (LitInt 1)),
+	(ExpLet ("foo", ExpLiteral (LitString "bar"),
+			 ExpLet ("hoge", ExpLiteral (LitInt 1),
 					 ExpLiteral (LitIdent "c"))))
 	("let foo -> \"bar\", hoge -> 1 { c }");
 
@@ -653,6 +653,173 @@ let _ = add_suites begin "Parser" >::: [
 (* let _ = add_suites begin "Translator" >::: [ *)
 (*   "trans_simple_exp" >:: test_trans_simple_exp; *)
 (* ] end *)
+
+
+(* test of normal.ml *)
+
+open Normal
+
+let rec normal_expr_equal expected actual = match (expected, actual) with
+  | (NexpVar _, NexpVar _) -> true
+  | (NexpInt x, NexpInt y) when x = y -> true
+  | (NexpFloat x, NexpFloat y) when x = y -> true
+  | (NexpString x, NexpString y) when x = y -> true
+  | (NexpBool x, NexpBool y) when x = y -> true
+  | (NexpUndef _, NexpUndef _) -> true
+  | (NexpLambda (ps1, body1), NexpLambda (ps2, body2)) ->
+	  (ps1 = ps2) && (normal_expr_equal body1 body2)
+  | (NexpApply _, NexpApply _) -> true
+  | (NexpBind (id1, _), NexpBind (id2, _)) -> true
+  | (NexpLet (_, v1, body1), NexpLet (_, v2, body2)) ->
+	  (normal_expr_equal v1 v2) && (normal_expr_equal body1 body2)
+  | (NexpPrefix (op1, _), NexpPrefix (op2, _)) when op1 = op2 -> true
+  | (NexpInfix (op1, _, _), NexpInfix (op2, _, _)) when op1 = op2 -> true
+  | (NexpIf (_, if1, else1), NexpIf (_, if2, else2)) -> 
+	  (normal_expr_equal if1 if2) && (normal_expr_equal else1 else2)
+  | _ ->
+	  false
+
+let assert_eq_normal_expr expected exp_str =
+  assert_equal ~msg:("Normalizing: " ^ exp_str)
+	~cmp:normal_expr_equal
+	~printer:(fun ne -> "\n" ^ (string_of_normal_expr ne) ^ "\n")
+	expected (normalize (parse_string exp_str))
+
+let assert_eq_letreduced_normal_expr expected exp_str =
+  assert_equal ~msg:("Normalizing: " ^ exp_str)
+	~cmp:normal_expr_equal
+	~printer:(fun ne -> "\n" ^ (string_of_normal_expr ne) ^ "\n")
+	expected (reduce_let (normalize (parse_string exp_str)))
+
+let test_norm_simple_exp _ =
+  assert_eq_normal_expr
+	NexpUndef
+	"undefined";
+
+  assert_eq_normal_expr
+	(NexpInt 1)
+	"1";
+
+  assert_eq_normal_expr
+	(NexpFloat 1.0)
+	"1.0";
+
+  assert_eq_normal_expr
+	(NexpBool false)
+	"false";
+
+  assert_eq_normal_expr
+	(NexpString "foo")
+	"\"foo\"";
+
+  assert_eq_normal_expr
+	(NexpVar "foo")
+	"foo";
+
+  assert_eq_normal_expr
+	(NexpLambda (["x"], NexpVar "y"))
+	"lambda (x) { y }";
+
+  assert_eq_normal_expr
+	(NexpLet ("tmp", (NexpInt 1),
+			  (NexpPrefix (PrefixMinus, "tmp"))))
+	"-1";
+
+  assert_eq_normal_expr
+	(NexpApply ("foo", ["x"; "y"]))
+	"foo(x, y)";
+
+  assert_eq_normal_expr
+	(NexpLet ("tmp", NexpInt 1,
+			  (NexpApply ("foo", ["tmp"; "y"]))))
+	"foo(1, y)";
+
+  assert_eq_normal_expr
+	(NexpLet ("tmp1", NexpInt 1,
+			  (NexpLet ("tmp2", NexpInt 2,
+						(NexpApply ("foo", ["tmp1"; "tmp2"]))))))
+	"foo(1, 2)";
+
+  assert_eq_normal_expr
+	(NexpBind ("foo", NexpInt 1))
+	"bind foo -> 1";
+
+  assert_eq_normal_expr
+	(NexpLet ("foo", NexpInt 1, NexpVar "foo"))
+	"let foo -> 1 in foo";
+
+  assert_eq_normal_expr
+	(NexpPrefix (PrefixPlus, "x"))
+	"+ x";
+
+  assert_eq_normal_expr
+	(NexpPrefix (PrefixMinus, "x"))
+	"- x";
+
+  assert_eq_normal_expr
+	(NexpInfix (InfixPlus, "x", "y"))
+	"x + y";
+
+  assert_eq_normal_expr
+	(NexpLet ("a", NexpInt 1,
+			  (NexpInfix (InfixPlus, "a", "y"))))
+	"1 + x";
+
+  assert_eq_normal_expr
+	(NexpLet ("tmp1", NexpVar "x",
+			  (NexpLet ("tmp2", NexpVar "y",
+						(NexpVar "z")))))
+	"x; y; z";
+
+  assert_eq_normal_expr
+	(NexpLet ("tmp1", NexpInt 1,
+			  (NexpLet ("tmp2", NexpInt 2,
+						(NexpInt 3)))))
+	"1; 2; 3";
+
+  ()
+
+let test_norm_arith_exp _ =
+  assert_eq_normal_expr
+	(NexpLet ("t1",
+			  NexpLet ("t2", NexpInt 1,
+					   NexpLet ("t3",
+								NexpLet ("t4", NexpInt 2,
+										 NexpLet ("t5", NexpInt 3,
+												  NexpInfix (InfixMul, "t4", "t5"))),
+								NexpInfix (InfixPlus, "t2", "t3"))),
+			  NexpLet ("t6",
+					   NexpInt 4,
+					   NexpInfix (InfixPlus, "t1", "t6"))))
+	"1 + 2 * 3 + 4";
+
+  ()
+
+let test_letreduced_norm_arith_exp _ =
+  assert_eq_letreduced_normal_expr
+	(NexpLet ("t2",
+			  NexpInt 1,
+			  NexpLet ("t4",
+					   NexpInt 2,
+					   NexpLet ("t5",
+								NexpInt 3,
+								NexpLet ("t3",
+										 NexpInfix (InfixMul, "t4", "t5"),
+										 NexpLet ("t1",
+												  NexpInfix (InfixPlus, "t2", "t3"),
+												  NexpLet ("t6",
+														   NexpInt 4,
+														   NexpInfix (InfixPlus, "t1", "t6"))))))))
+	"1 + 2 * 3 + 4";
+
+  ()
+
+
+let _ = add_suites begin "Translator" >::: [
+  "norm_simple_exp" >:: test_norm_simple_exp;
+  "norm_arith_exp" >:: test_norm_arith_exp;
+  "letreduced_norm_arith_exp" >:: test_letreduced_norm_arith_exp;
+] end
 
 
 

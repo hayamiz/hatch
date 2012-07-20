@@ -6,8 +6,8 @@
 
   let rec make_let bs body =
 	match bs with
-		b1 :: b2 :: bs -> ExpLet (b1, (make_let (b2 :: bs) body))
-	  | b :: [] -> ExpLet (b, body)
+		(id, v) :: b2 :: bs -> ExpLet (id, v, (make_let (b2 :: bs) body))
+	  | (id, v) :: [] -> ExpLet (id, v, body)
 	  | [] -> raise (Failure "invalid argument for make_let")
   ;;
 

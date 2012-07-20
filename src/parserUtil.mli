@@ -1,6 +1,8 @@
 
 open Syntax
 
+val string_of_prefix_oper: Syntax.egg_prefix_oper -> string
+val string_of_infix_oper: Syntax.egg_infix_oper -> string
 val string_of_token: Parser.token -> string
 val string_of_tokens: Parser.token list -> string
 val string_of_literal: egg_literal -> string
