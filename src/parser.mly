@@ -55,7 +55,7 @@
 %left EQ LE GE LT GT    /* 4th precedence */
 %left PLUS MINUS        /* 3rd precedence */
 %left MUL DIV           /* 2nd precedence */
-%nonassoc UPLUS UMINUS  /* highest precedence */
+%right prec_prefix
 %start main             /* the entry point */
 %type <Tree.egg_expr> main
 %%
@@ -72,15 +72,15 @@ literal:
   | UNDEF  { ExpLiteral (LitUndef, $1) }
 
 expr:
-    primary_expr      { $1 }
-  | closure_expr      { $1 }
-  | apply_expr        { $1 }
-  | bind_expr         { $1 }
-  | let_expr          { $1 }
-  | infix_expr        { $1 }
-  | block_expr        { $1 }
-  | if_expr           { $1 }
-  | return_expr       { $1 }
+    closure_expr        { $1 }
+  | apply_expr          { $1 }
+  | noparen_apply_expr  { $1 }
+  | bind_expr           { $1 }
+  | let_expr            { $1 }
+  | infix_expr          { $1 }
+  | block_expr          { $1 }
+  | if_expr             { $1 }
+  | return_expr         { $1 }
 
 primary_expr:
     literal             { $1 }
@@ -94,8 +94,16 @@ argument_list:
     expr COMMA argument_list  { $1 :: $3 }
   | expr                      { [$1] }
   |                           { [] }
+
 apply_expr:
-    primary_expr LPAREN argument_list RPAREN   { ExpApply ($1, $3, noloc) }
+    primary_expr LPAREN argument_list RPAREN               { ExpApply ($1, $3, noloc) }
+
+noparen_argument_list:
+    primary_expr COMMA noparen_argument_list { $1 :: $3 }
+  | primary_expr                             { [$1] }
+
+noparen_apply_expr:
+    primary_expr noparen_argument_list                     { ExpApply ($1, $2, noloc) }
 
 assignments:
     IDENT RARROW expr COMMA assignments  { let (id, _) = $1 in (id, $3) :: $5 }
@@ -111,8 +119,8 @@ let_expr:
 
 prefix_expr:
     primary_expr                    { $1 }
-  | PLUS  primary_expr %prec UPLUS  { ExpPrefix (PrefixPlus,  $2, noloc) }
-  | MINUS primary_expr %prec UMINUS { ExpPrefix (PrefixMinus, $2, noloc) }
+  | PLUS  primary_expr %prec prec_prefix  { ExpPrefix (PrefixPlus,  $2, noloc) }
+  | MINUS primary_expr %prec prec_prefix  { ExpPrefix (PrefixMinus, $2, noloc) }
   | LNOT  primary_expr              { ExpPrefix (PrefixLnot,  $2, noloc) }
 
 infix_expr:

@@ -294,6 +294,13 @@ let test_parser_apply_expr _ =
 			   noloc))
 	("a(1,3,4)");
 
+  assert_eq_egg_expr
+	(ExpApply (ExpLiteral (LitIdent "print", noloc),
+			   [ExpLiteral (LitInt 1, noloc);
+				ExpLiteral (LitInt 2, noloc)],
+			   noloc))
+	("print 1, 2");
+
   ()
 
 let test_parser_bind_expr _ =
@@ -515,12 +522,6 @@ let test_parser_infix_comp_arith_expr _ =
 			   (parse_string "5*6"), noloc))
 	("3+4 > 5*6");
 
-  assert_eq_egg_expr
-	(ExpInfix (InfixLe,
-			   (parse_string "3+ -4"),
-			   (parse_string "5/6"), noloc))
-	("3+ -4 <= 5/6");
-
   ()
 
 let test_parser_infix_logi_expr _ =
@@ -566,19 +567,19 @@ let test_parser_prefix_infix_expr _ =
   assert_eq_egg_expr
 	(ExpInfix (InfixPlus,
 			   ExpPrefix (PrefixPlus, ExpLiteral (LitInt 1, noloc), noloc),
-			   ExpPrefix (PrefixMinus, ExpLiteral (LitInt 2, noloc), noloc),
+			   ExpLiteral (LitInt 2, noloc),
 			   noloc))
-	("+1 + -2");
+	("+1 + 2");
 
   assert_eq_egg_expr
 	(ExpInfix (InfixPlus,
-			   ExpLiteral (LitInt 3, noloc),
+			   ExpPrefix (PrefixMinus, ExpLiteral (LitInt 3, noloc), noloc),
 			   ExpInfix (InfixMul,
-						 ExpPrefix (PrefixMinus, ExpLiteral (LitInt 4, noloc), noloc),
+						 ExpLiteral (LitInt 4, noloc),
 						 ExpPrefix (PrefixMinus, ExpLiteral (LitInt 2, noloc), noloc),
 						 noloc),
 			   noloc))
-	("3 + -4 * -2");
+	("-3 + 4 * -2");
 
   ()
 
@@ -601,6 +602,10 @@ let test_parser_block_expr _ =
   ()
 
 let test_parser_if_expr _ =
+  assert_eq_tokens
+	[IF (noloc); IDENT ("a", noloc); IDENT ("b", noloc)]
+	(tokens_from_string "if a b");
+
   assert_eq_egg_expr
 	(ExpIf (ExpLiteral (LitIdent "a", noloc),
 			ExpLiteral (LitIdent "b", noloc),
