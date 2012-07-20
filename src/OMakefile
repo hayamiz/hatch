@@ -49,11 +49,14 @@ OCamlGeneratedFiles(lexer.ml parser.ml)
 
 FILES[] =
     symbol
+    smap
     syntax
     lexer
     parser
     parserUtil
     normal
+    alpha
+    beta
     main
 
 PROGRAM = hatch

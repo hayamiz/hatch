@@ -5,14 +5,6 @@ open ParserUtil
 open Syntax
 open Symbol
 
-module SymMap =
-  Map.Make
-    (struct
-      type t = sym
-      let compare = compare
-    end)
-include SymMap
-
 type normal_expr =
 	NexpVar of sym
   | NexpInt of int
@@ -99,7 +91,7 @@ let rec norm env exp =
 	| ExpBind (var, v) ->
 		NexpBind (var, norm env v)
 	| ExpLet (var, v, body) ->
-		let env' = SymMap.add var true env in
+		let env' = Smap.add var true env in
 		  NexpLet (var,
 				   norm env v,
 				   norm env' body)
@@ -130,7 +122,7 @@ let rec norm env exp =
 	| _ -> NexpUndef
 
 let normalize exp =
-  norm SymMap.empty exp
+  norm Smap.empty exp
 
 let rec reduce_let nexp =
   match nexp with
@@ -163,3 +155,51 @@ let rec reduce_let nexp =
 		nexp
 	| NexpIf (cond, if_body, else_body) ->
 		NexpIf (cond, reduce_let if_body, reduce_let else_body)
+
+let rec normal_expr_equal ?(exact=false) expected actual =
+  let comp_sym x y =
+	if exact then
+	  if (String.length x >= 4 && (String.sub x 0 4) = "sym#") &&
+		(String.length y >= 4 && (String.sub y 0 4) = "sym#") then
+		  true
+	  else
+		x = y
+	else
+	   true
+  in
+  let rec comp_syms ss1 ss2 =
+	match (ss1, ss2) with
+		([], []) -> true
+	  | (_ :: _, [])
+	  | ([], _ :: _) -> false
+	  | (s1 :: ss1, s2 :: ss2) ->
+		  if comp_sym s1 s2 then
+			comp_syms ss1 ss2
+		  else false
+  in
+	match (expected, actual) with
+	  | (NexpVar x, NexpVar y) -> comp_sym x y
+	  | (NexpInt x, NexpInt y) when x = y -> true
+	  | (NexpFloat x, NexpFloat y) when x = y -> true
+	  | (NexpString x, NexpString y) when x = y -> true
+	  | (NexpBool x, NexpBool y) when x = y -> true
+	  | (NexpUndef , NexpUndef ) -> true
+	  | (NexpLambda (ps1, body1), NexpLambda (ps2, body2)) ->
+		  (comp_syms ps1 ps2) && (normal_expr_equal ~exact:exact body1 body2)
+	  | (NexpApply (f1, args1), NexpApply (f2, args2)) ->
+		  (comp_sym f1 f2) &&
+			(comp_syms args1 args2)
+	  | (NexpBind (id1, v1), NexpBind (id2, v2)) ->
+		  (comp_sym id1 id2) && (normal_expr_equal ~exact:exact v1 v2)
+	  | (NexpLet (id1, v1, body1), NexpLet (id2, v2, body2)) ->
+		  (comp_sym id1 id2) && 
+			(normal_expr_equal ~exact:exact v1 v2) &&
+			(normal_expr_equal ~exact:exact body1 body2)
+	  | (NexpPrefix (op1, v1), NexpPrefix (op2, v2)) ->
+		  (op1 = op2) && (comp_sym v1 v2)
+	  | (NexpInfix (op1, lv1, rv1), NexpInfix (op2, lv2, rv2)) ->
+		  (op1 = op2) && (comp_sym lv1 lv2) && (comp_sym rv1 rv2)
+	  | (NexpIf (c1, if1, else1), NexpIf (c2, if2, else2)) -> 
+		  (comp_sym c1 c2) && (normal_expr_equal ~exact:exact if1 if2) && (normal_expr_equal ~exact:exact else1 else2)
+	  | _ ->
+		  false

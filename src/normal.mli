@@ -22,3 +22,5 @@ type normal_expr =
 val string_of_normal_expr: ?indent:int -> normal_expr -> string
 val normalize: Syntax.egg_expr -> normal_expr
 val reduce_let: normal_expr -> normal_expr
+
+val normal_expr_equal: ?exact:bool -> normal_expr -> normal_expr -> bool

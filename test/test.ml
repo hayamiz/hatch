@@ -659,26 +659,6 @@ let _ = add_suites begin "Parser" >::: [
 
 open Normal
 
-let rec normal_expr_equal expected actual = match (expected, actual) with
-  | (NexpVar _, NexpVar _) -> true
-  | (NexpInt x, NexpInt y) when x = y -> true
-  | (NexpFloat x, NexpFloat y) when x = y -> true
-  | (NexpString x, NexpString y) when x = y -> true
-  | (NexpBool x, NexpBool y) when x = y -> true
-  | (NexpUndef _, NexpUndef _) -> true
-  | (NexpLambda (ps1, body1), NexpLambda (ps2, body2)) ->
-	  (ps1 = ps2) && (normal_expr_equal body1 body2)
-  | (NexpApply _, NexpApply _) -> true
-  | (NexpBind (id1, _), NexpBind (id2, _)) -> true
-  | (NexpLet (_, v1, body1), NexpLet (_, v2, body2)) ->
-	  (normal_expr_equal v1 v2) && (normal_expr_equal body1 body2)
-  | (NexpPrefix (op1, _), NexpPrefix (op2, _)) when op1 = op2 -> true
-  | (NexpInfix (op1, _, _), NexpInfix (op2, _, _)) when op1 = op2 -> true
-  | (NexpIf (_, if1, else1), NexpIf (_, if2, else2)) -> 
-	  (normal_expr_equal if1 if2) && (normal_expr_equal else1 else2)
-  | _ ->
-	  false
-
 let assert_eq_normal_expr expected exp_str =
   assert_equal ~msg:("Normalizing: " ^ exp_str)
 	~cmp:normal_expr_equal
@@ -815,11 +795,209 @@ let test_letreduced_norm_arith_exp _ =
   ()
 
 
-let _ = add_suites begin "Translator" >::: [
+let _ = add_suites begin "Normal" >::: [
   "norm_simple_exp" >:: test_norm_simple_exp;
   "norm_arith_exp" >:: test_norm_arith_exp;
   "letreduced_norm_arith_exp" >:: test_letreduced_norm_arith_exp;
 ] end
+
+
+(* test of alpha.ml *)
+
+let assert_eq_alpha expected actual =
+  assert_equal ~msg:("Normalizing: " ^ (string_of_normal_expr actual))
+	~cmp:(fun x y -> normal_expr_equal ~exact:true x y)
+	~printer:(fun ne -> "\n" ^ (string_of_normal_expr ne) ^ "\n")
+	expected actual
+
+let test_normal_expr_equal _ =
+  assert_eq_alpha
+	(NexpLambda (["sym#x2"],
+			NexpVar "sym#x2"))
+	(NexpLambda (["sym#x12"],
+				 NexpVar "sym#x12"))
+  ;
+
+  assert_eq_alpha
+	(NexpLet ("x",
+			  NexpInt 1,
+			  NexpLet ("sym#x1",
+					   NexpVar "x",
+					   (NexpLet ("y",
+								 NexpVar "sym#x1",
+								 NexpLambda (["sym#x2"],
+											 NexpVar "sym#x2"))))))
+	(NexpLet ("x",
+			  NexpInt 1,
+			  NexpLet ("sym#x11",
+					   NexpVar "x",
+					   (NexpLet ("y",
+								 NexpVar "sym#x11",
+								 NexpLambda (["sym#x12"],
+											 NexpVar "sym#x12"))))))
+  ;
+
+  ()
+
+let test_alpha_convert _ =
+  assert_eq_alpha
+	(NexpLet ("x",
+			  NexpInt 1,
+			  NexpLet ("y",
+					   NexpVar "x",
+					   NexpVar "y")))
+	(Alpha.alpha_convert
+	   (NexpLet ("x",
+				 NexpInt 1,
+				 NexpLet ("y",
+						  NexpVar "x",
+						  NexpVar "y"))))
+	;
+
+  assert_eq_alpha
+	(NexpLet ("x",
+			  NexpInt 1,
+			  NexpLet ("sym#inner_x",
+					   NexpVar "x",
+					   NexpVar "sym#inner_x")))
+	(Alpha.alpha_convert
+	   (NexpLet ("x",
+				 NexpInt 1,
+				 NexpLet ("x",
+						  NexpVar "x",
+						  NexpVar "x"))))
+	;
+
+  assert_eq_alpha
+	(NexpLet ("x",
+				 NexpInt 1,
+				 NexpLet ("sym#x1",
+						  NexpVar "x",
+						  (NexpLet ("y",
+									NexpVar "sym#x1",
+									NexpLambda (["sym#x2"],
+												NexpVar "sym#x2"))))))
+	(Alpha.alpha_convert
+	   (NexpLet ("x",
+				 NexpInt 1,
+				 NexpLet ("x",
+						  NexpVar "x",
+						  (NexpLet ("y",
+									NexpVar "x",
+									NexpLambda (["x"],
+												NexpVar "x")))))))
+  ;
+
+  assert_eq_alpha
+	(NexpLet ("x",
+				 NexpInt 1,
+				 NexpLet ("sym#x",
+						  NexpVar "x",
+						  (NexpLet ("y",
+									NexpVar "sym#x",
+									NexpApply ("f", ["sym#x"]))))))
+	(Alpha.alpha_convert
+	   (NexpLet ("x",
+				 NexpInt 1,
+				 NexpLet ("x",
+						  NexpVar "x",
+						  (NexpLet ("y",
+									NexpVar "x",
+									NexpApply ("f", ["x"])))))))
+  ;
+
+  assert_eq_alpha
+	(NexpLet ("x",
+			  NexpInt 1,
+			  NexpLet ("sym#x",
+					   NexpVar "x",
+					   NexpBind ("x", NexpInt 1))))
+	(Alpha.alpha_convert
+	   (NexpLet ("x",
+			  NexpInt 1,
+			  NexpLet ("x",
+					   NexpVar "x",
+					   NexpBind ("x", NexpInt 1)))))
+  ;
+
+  assert_eq_alpha
+	(NexpLet ("x",
+			  NexpInt 1,
+			  NexpLet ("sym#x",
+					   NexpVar "x",
+					   NexpBind ("y", NexpVar "sym#x"))))
+	(Alpha.alpha_convert
+	   (NexpLet ("x",
+			  NexpInt 1,
+			  NexpLet ("x",
+					   NexpVar "x",
+					   NexpBind ("y", NexpVar "x")))))
+  ;
+
+  assert_eq_alpha
+	(NexpLet ("x",
+			  NexpInt 1,
+			  NexpLet ("sym#x",
+					   NexpVar "x",
+					   NexpPrefix (PrefixPlus, "sym#x"))))
+	(Alpha.alpha_convert
+	   (NexpLet ("x",
+				 NexpInt 1,
+				 NexpLet ("x",
+						  NexpVar "x",
+						  NexpPrefix (PrefixPlus, "x")))))
+  ;
+
+  assert_eq_alpha
+	(NexpLet ("x",
+			  NexpInt 1,
+			  NexpLet ("sym#x",
+					   NexpVar "x",
+					   NexpInfix (InfixPlus, "sym#x", "y"))))
+	(Alpha.alpha_convert
+	   (NexpLet ("x",
+				 NexpInt 1,
+				 NexpLet ("x",
+						  NexpVar "x",
+						  NexpInfix (InfixPlus, "x", "y")))))
+  ;
+
+  assert_eq_alpha
+	(NexpLet ("x",
+			  NexpInt 1,
+			  NexpLet ("sym#x",
+					   NexpVar "x",
+					   NexpIf ("y", NexpVar "z", NexpVar "w"))))
+	(Alpha.alpha_convert
+	   (NexpLet ("x",
+				 NexpInt 1,
+				 NexpLet ("x",
+						  NexpVar "x",
+						  NexpIf ("y", NexpVar "z", NexpVar "w")))))
+  ;
+
+  assert_eq_alpha
+	(NexpLet ("x",
+			  NexpInt 1,
+			  NexpLet ("sym#x",
+					   NexpVar "x",
+					   NexpIf ("sym#x", NexpVar "sym#x", NexpVar "sym#x"))))
+	(Alpha.alpha_convert
+	   (NexpLet ("x",
+				 NexpInt 1,
+				 NexpLet ("x",
+						  NexpVar "x",
+						  NexpIf ("x", NexpVar "x", NexpVar "x")))))
+  ;
+
+
+  ()
+
+let _ = add_suites begin "Alpha" >::: [
+  "normal_expr_equal" >:: test_normal_expr_equal;
+  "alpha_convert" >:: test_alpha_convert;
+] end
+
 
 
 
