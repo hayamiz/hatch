@@ -2,74 +2,65 @@
 
 %{
 
-  open Tree
+  open Syntax
 
-  let make_lit_id (str, loc) =
-	ExpLiteral (LitIdent (str), loc)
-
-  let make_lit_int (int, loc) =
-	ExpLiteral (LitInt (int), loc)
-
-  let make_lit_float (flt, loc) =
-	ExpLiteral (LitFloat (flt), loc)
-
-  let make_lit_str (str, loc) =
-	ExpLiteral (LitString (str), loc)
-
-  let make_lit_bool b loc =
-	ExpLiteral (LitBool b, loc)
+  let rec make_let bs body =
+	match bs with
+		b1 :: b2 :: bs -> ExpLet (b1, (make_let (b2 :: bs) body))
+	  | b :: [] -> ExpLet (b, body)
+	  | [] -> raise (Failure "invalid argument for make_let")
 
   let make_comp_expr e se =
 	match se with
-		(ExpSeq (es, loc)) ->
+		(ExpSeq (es)) ->
 		  begin
 			match es with
 			  (e1 :: erest) -> 
-				ExpSeq ((e :: es), loc)
+				ExpSeq ((e :: es))
 			  | [] -> e
 		  end
-	  | _ -> ExpSeq ([e; se], noloc)
+	  | _ -> ExpSeq ([e; se])
   ;;
 
 %}
 
-%token <int * Tree.location> INT
-%token <float * Tree.location> FLOAT
-%token <string * Tree.location> STRING
-%token <string * Tree.location> IDENT
-%token <Tree.location> UNDEF
-%token <Tree.location> TRUE FALSE
-%token <Tree.location> LPAREN RPAREN
-%token <Tree.location> LBRAKET RBRAKET
-%token <Tree.location> LBRACE RBRACE
-%token <Tree.location> COMMA SEMICOLON DOT
-%token <Tree.location> PLUS MINUS MUL DIV
-%token <Tree.location> EQ LE GE LT GT
-%token <Tree.location> LAND LOR LNOT
-%token <Tree.location> LAMBDA
-%token <Tree.location> IF ELSE
-%token <Tree.location> BIND RARROW LET IN
-%token <Tree.location> RETURN
-%token <Tree.location> EOF
+%token <int> INT
+%token <float> FLOAT
+%token <string> STRING
+%token <string> IDENT
+%token UNDEF
+%token TRUE FALSE
+%token LPAREN RPAREN
+%token LBRAKET RBRAKET
+%token LBRACE RBRACE
+%token COMMA SEMICOLON DOT
+%token PLUS MINUS MUL DIV
+%token EQ LE GE LT GT
+%token LAND LOR LNOT
+%token LAMBDA
+%token IF ELSE
+%token BIND RARROW LET IN
+%token RETURN
+%token EOF
 %left LAND LOR          /* 5th precedence */
 %left EQ LE GE LT GT    /* 4th precedence */
 %left PLUS MINUS        /* 3rd precedence */
 %left MUL DIV           /* 2nd precedence */
 %right prec_prefix
 %start main             /* the entry point */
-%type <Tree.egg_expr> main
+%type <Syntax.egg_expr> main
 %%
 main:
     compound_expr EOF                { $1 }
 ;
 literal:
-    IDENT  { make_lit_id $1 }
-  | INT    { make_lit_int $1 }
-  | FLOAT  { make_lit_float $1 }
-  | STRING { make_lit_str $1 }
-  | TRUE   { make_lit_bool true $1 }
-  | FALSE  { make_lit_bool false $1 }
-  | UNDEF  { ExpLiteral (LitUndef, $1) }
+    IDENT  { ExpLiteral (LitIdent $1) }
+  | INT    { ExpLiteral (LitInt $1) }
+  | FLOAT  { ExpLiteral (LitFloat $1) }
+  | STRING { ExpLiteral (LitString $1) }
+  | TRUE   { ExpLiteral (LitBool true) }
+  | FALSE  { ExpLiteral (LitBool false) }
+  | UNDEF  { ExpLiteral (LitUndef) }
 
 expr:
     closure_expr        { $1 }
@@ -88,7 +79,7 @@ primary_expr:
   | LPAREN expr RPAREN  { $2 }
 
 closure_expr:
-    LAMBDA LPAREN param_list RPAREN expr  { ExpClosure ($3, $5, noloc)}
+    LAMBDA LPAREN param_list RPAREN expr  { ExpClosure ($3, $5)}
 
 argument_list:
     expr COMMA argument_list  { $1 :: $3 }
@@ -96,71 +87,74 @@ argument_list:
   |                           { [] }
 
 apply_expr:
-    primary_expr LPAREN argument_list RPAREN               { ExpApply ($1, $3, noloc) }
+    primary_expr LPAREN argument_list RPAREN               { ExpApply ($1, $3) }
 
 noparen_argument_list:
     primary_expr COMMA noparen_argument_list { $1 :: $3 }
   | primary_expr                             { [$1] }
 
 noparen_apply_expr:
-    primary_expr noparen_argument_list                     { ExpApply ($1, $2, noloc) }
+    primary_expr noparen_argument_list                     { ExpApply ($1, $2) }
 
-assignments:
-    IDENT RARROW expr COMMA assignments  { let (id, _) = $1 in (id, $3) :: $5 }
-  | IDENT RARROW expr                    { let (id, _) = $1 in [(id, $3)] }
+binding:
+    IDENT RARROW expr                    { ($1, $3) }
+
+bindings:
+    binding COMMA bindings  { $1 :: $3 }
+  | binding                 { [$1] }
 
 bind_expr:
-    BIND assignments  { ExpBind ($2, noloc) }
+    BIND binding  { ExpBind ($2) }
 
 let_expr:
-    LET assignments IN expr  { ExpLet ($2, $4, noloc) }
-  | LET assignments LBRACE compound_expr RBRACE
-                             { ExpLet ($2, $4, noloc) }
+    LET bindings IN expr     { make_let $2 $4 }
+  | LET bindings LBRACE compound_expr RBRACE
+                             { make_let $2 $4 }
 
 prefix_expr:
     primary_expr                    { $1 }
-  | PLUS  primary_expr %prec prec_prefix  { ExpPrefix (PrefixPlus,  $2, noloc) }
-  | MINUS primary_expr %prec prec_prefix  { ExpPrefix (PrefixMinus, $2, noloc) }
-  | LNOT  primary_expr              { ExpPrefix (PrefixLnot,  $2, noloc) }
+  | PLUS  primary_expr %prec prec_prefix  { ExpPrefix (PrefixPlus,  $2) }
+  | MINUS primary_expr %prec prec_prefix  { ExpPrefix (PrefixMinus, $2) }
+  | LNOT  primary_expr              { ExpPrefix (PrefixLnot,  $2) }
 
 infix_expr:
     prefix_expr                    { $1 }
-  | infix_expr PLUS  infix_expr  { ExpInfix (InfixPlus,  $1, $3, noloc) }
-  | infix_expr MINUS infix_expr  { ExpInfix (InfixMinus, $1, $3, noloc) }
-  | infix_expr MUL   infix_expr  { ExpInfix (InfixMul,   $1, $3, noloc) }
-  | infix_expr DIV   infix_expr  { ExpInfix (InfixDiv,   $1, $3, noloc) }
-  | infix_expr EQ    infix_expr  { ExpInfix (InfixEq,    $1, $3, noloc) }
-  | infix_expr LE    infix_expr  { ExpInfix (InfixLe,    $1, $3, noloc) }
-  | infix_expr GE    infix_expr  { ExpInfix (InfixGe,    $1, $3, noloc) }
-  | infix_expr LT    infix_expr  { ExpInfix (InfixLt,    $1, $3, noloc) }
-  | infix_expr GT    infix_expr  { ExpInfix (InfixGt,    $1, $3, noloc) }
-  | infix_expr LAND  infix_expr  { ExpInfix (InfixLand,  $1, $3, noloc) }
-  | infix_expr LOR   infix_expr  { ExpInfix (InfixLor,   $1, $3, noloc) }
+  | infix_expr PLUS  infix_expr  { ExpInfix (InfixPlus,  $1, $3) }
+  | infix_expr MINUS infix_expr  { ExpInfix (InfixMinus, $1, $3) }
+  | infix_expr MUL   infix_expr  { ExpInfix (InfixMul,   $1, $3) }
+  | infix_expr DIV   infix_expr  { ExpInfix (InfixDiv,   $1, $3) }
+  | infix_expr EQ    infix_expr  { ExpInfix (InfixEq,    $1, $3) }
+  | infix_expr LE    infix_expr  { ExpInfix (InfixLe,    $1, $3) }
+  | infix_expr GE    infix_expr  { ExpInfix (InfixGe,    $1, $3) }
+  | infix_expr LT    infix_expr  { ExpInfix (InfixLt,    $1, $3) }
+  | infix_expr GT    infix_expr  { ExpInfix (InfixGt,    $1, $3) }
+  | infix_expr LAND  infix_expr  { ExpInfix (InfixLand,  $1, $3) }
+  | infix_expr LOR   infix_expr  { ExpInfix (InfixLor,   $1, $3) }
 
 param_list:
-    IDENT COMMA param_list   { let (id,_) = $1 in id :: $3 }
-  | IDENT                    { let (id,_) = $1 in [id] }
+    IDENT COMMA param_list   { $1 :: $3 }
+  | IDENT                    { [$1] }
   |                          { [] }
 
 block_expr:
     LBRACE compound_expr RBRACE   { $2 }
 compound_expr:
     expr SEMICOLON compound_expr  { make_comp_expr $1 $3 }
-  | expr                          { make_comp_expr $1 (ExpSeq ([], noloc))}
-  |                               { ExpSeq ([], noloc) }
+  | expr                          { make_comp_expr $1 (ExpSeq ([]))}
+  |                               { ExpSeq ([]) }
 
 cond_expr:
     primary_expr        { $1 }
   | infix_expr          { $1 }
 
 if_expr:
-    IF cond_expr expr ELSE expr  { ExpIf ($2, $3, $5, noloc) }
-  | IF cond_expr expr            { ExpIf ($2, $3, ExpNop, noloc) }
+    IF cond_expr expr ELSE expr  { ExpIf ($2, $3, $5) }
+  | IF cond_expr expr            { ExpIf ($2, $3, ExpNop) }
 ;
 
 return_expr:
-    RETURN expr  { ExpReturn ($2, noloc) }
-  | RETURN       { ExpReturn (ExpLiteral (LitUndef, noloc), noloc) }
+    RETURN expr  { ExpReturn ($2) }
+  | RETURN       { ExpReturn (ExpLiteral (LitUndef)) }
 
 %%
 

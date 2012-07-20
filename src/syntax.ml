@@ -8,16 +8,16 @@ type location = {
 
 type egg_expr =
 	ExpNop								(* no op *)
-  | ExpLiteral of (egg_literal * location)
-  | ExpClosure of (string list * egg_expr * location) (* TODO: fix param list *)
-  | ExpApply   of (egg_expr * egg_expr list * location)
-  | ExpBind    of ((string * egg_expr) list * location)
-  | ExpLet     of ((string * egg_expr) list * egg_expr * location)
-  | ExpPrefix  of (egg_prefix_oper * egg_expr * location)
-  | ExpInfix   of (egg_infix_oper * egg_expr * egg_expr * location)
-  | ExpSeq     of (egg_expr list * location) (* compound and block expression *)
-  | ExpIf      of (egg_expr * egg_expr * egg_expr * location)
-  | ExpReturn  of (egg_expr * location)
+  | ExpLiteral of (egg_literal)
+  | ExpClosure of (string list * egg_expr) (* TODO: fix param list *)
+  | ExpApply   of (egg_expr * egg_expr list)
+  | ExpBind    of ((string * egg_expr))
+  | ExpLet     of ((string * egg_expr) * egg_expr)
+  | ExpPrefix  of (egg_prefix_oper * egg_expr)
+  | ExpInfix   of (egg_infix_oper * egg_expr * egg_expr)
+  | ExpSeq     of (egg_expr list) (* compound and block expression *)
+  | ExpIf      of (egg_expr * egg_expr * egg_expr)
+  | ExpReturn  of (egg_expr)
 
 and egg_prefix_oper =
 	PrefixPlus

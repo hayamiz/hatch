@@ -48,11 +48,13 @@ OCamlGeneratedFiles(lexer.ml parser.ml)
 #
 
 FILES[] =
-    tree
+    syntax
     lexer
     parser
     parserUtil
-    semantic
+    translator
+    vm
+    vmis
     main
 
 PROGRAM = hatch

@@ -1,7 +1,7 @@
 (* File lexer.mll *)
 {
 open Parser        (* The type token is defined in parser.mli *)
-open Tree
+open Syntax
 exception Eof
 
 let unquote_str str =
@@ -19,42 +19,42 @@ let unquote_str str =
 rule token = parse
     [' ' '\t']     { token lexbuf }     (* skip blanks *)
   | '#' [^ '\n']*  { token lexbuf }		(* comment *)
-  | "undefined"    { UNDEF noloc }
-  | "lambda"       { LAMBDA noloc }
-  | "bind"         { BIND noloc }
-  | "let"          { LET noloc }
-  | "in"           { IN noloc }
-  | "return"       { RETURN noloc }
-  | "->"           { RARROW noloc }
-  | "if"           { IF noloc }
-  | "else"         { ELSE noloc }
-  | "true"         { TRUE noloc }
-  | "false"        { FALSE noloc }
+  | "undefined"    { UNDEF }
+  | "lambda"       { LAMBDA }
+  | "bind"         { BIND }
+  | "let"          { LET }
+  | "in"           { IN }
+  | "return"       { RETURN }
+  | "->"           { RARROW }
+  | "if"           { IF }
+  | "else"         { ELSE }
+  | "true"         { TRUE }
+  | "false"        { FALSE }
   | ['A'-'Z' 'a'-'z'] ['A'-'Z' 'a'-'z' '0'-'9']*
-                   { IDENT (Lexing.lexeme lexbuf, noloc) }
+                   { IDENT (Lexing.lexeme lexbuf) }
   | ['0'-'9']+ '.' ['0'-'9']* (['e' 'E'] ['+' '-']? ['0'-'9']+)?
-                   { FLOAT(float_of_string(Lexing.lexeme lexbuf), noloc) }
-  | ['0'-'9']+     { INT(int_of_string(Lexing.lexeme lexbuf), noloc) }
-  | '"' ("\\\""|[^ '"'])* '"'        { STRING(unquote_str (Lexing.lexeme lexbuf), noloc) }
-  | '('            { LPAREN noloc }
-  | ')'            { RPAREN noloc }
-  | '{'            { LBRACE noloc }
-  | '}'            { RBRACE noloc }
-  | '['            { LBRAKET noloc }
-  | ']'            { RBRAKET noloc }
-  | ','            { COMMA noloc }
-  | ';'            { SEMICOLON noloc }
-  | '.'            { DOT  noloc }
-  | '+'            { PLUS noloc }
-  | '-'            { MINUS noloc }
-  | '*'            { MUL noloc }
-  | '/'            { DIV noloc }
-  | "<="           { LE noloc }
-  | ">="           { GE noloc }
-  | '<'            { LT noloc }
-  | '>'            { GT noloc }
-  | '=' '='?       { EQ noloc }
-  | "&&"           { LAND noloc }
-  | "||"           { LOR noloc }
-  | '!'            { LNOT noloc }
-  | eof            { EOF noloc }
+                   { FLOAT(float_of_string(Lexing.lexeme lexbuf)) }
+  | ['0'-'9']+     { INT(int_of_string(Lexing.lexeme lexbuf)) }
+  | '"' ("\\\""|[^ '"'])* '"'        { STRING(unquote_str (Lexing.lexeme lexbuf)) }
+  | '('            { LPAREN }
+  | ')'            { RPAREN }
+  | '{'            { LBRACE }
+  | '}'            { RBRACE }
+  | '['            { LBRAKET }
+  | ']'            { RBRAKET }
+  | ','            { COMMA }
+  | ';'            { SEMICOLON }
+  | '.'            { DOT  }
+  | '+'            { PLUS }
+  | '-'            { MINUS }
+  | '*'            { MUL }
+  | '/'            { DIV }
+  | "<="           { LE }
+  | ">="           { GE }
+  | '<'            { LT }
+  | '>'            { GT }
+  | '=' '='?       { EQ }
+  | "&&"           { LAND }
+  | "||"           { LOR }
+  | '!'            { LNOT }
+  | eof            { EOF }

@@ -1,6 +1,6 @@
 
 open OUnit
-open Tree
+open Syntax
 open Parser
 open ParserUtil
 
@@ -13,74 +13,67 @@ let add_suites suite =
 (* test of paserUtil.ml *)
 
 let test_string_of_token _ =
-  assert_equal ~printer:id "INT 1" (ParserUtil.string_of_token (INT (1, noloc)));
-  assert_equal ~printer:id ("FLOAT " ^ (string_of_float 1.23)) (ParserUtil.string_of_token (FLOAT (1.23, noloc)));
-  assert_equal ~printer:id "PLUS" (ParserUtil.string_of_token (PLUS noloc));
-  assert_equal ~printer:id "MINUS" (ParserUtil.string_of_token (MINUS noloc));
-  assert_equal ~printer:id "IDENT \"foo\"" (ParserUtil.string_of_token (IDENT ("foo", noloc)));
-  assert_equal ~printer:id "STRING \"foo\"" (ParserUtil.string_of_token (STRING ("foo", noloc)));
-  assert_equal ~printer:id "STRING \"f\\\"oo\"" (ParserUtil.string_of_token (STRING ("f\"oo", noloc)));
-  assert_equal ~printer:id "STRING \"f\\noo\"" (ParserUtil.string_of_token (STRING ("f\noo", noloc)));
-  assert_equal ~printer:id "STRING \"f\\too\"" (ParserUtil.string_of_token (STRING ("f\too", noloc)));
-  assert_equal ~printer:id "TRUE" (ParserUtil.string_of_token (TRUE noloc));
-  assert_equal ~printer:id "FALSE" (ParserUtil.string_of_token (FALSE noloc));
-  assert_equal ~printer:id "UNDEF" (ParserUtil.string_of_token (UNDEF noloc));
-  assert_equal ~printer:id "LAND" (ParserUtil.string_of_token (LAND noloc));
-  assert_equal ~printer:id "LOR" (ParserUtil.string_of_token (LOR noloc));
-  assert_equal ~printer:id "LNOT" (ParserUtil.string_of_token (LNOT noloc));
-  assert_equal ~printer:id "LET" (ParserUtil.string_of_token (LET noloc));
-  assert_equal ~printer:id "IN" (ParserUtil.string_of_token (IN noloc));
-  assert_equal ~printer:id "RETURN" (ParserUtil.string_of_token (RETURN noloc));
+  assert_equal ~printer:id "INT 1" (ParserUtil.string_of_token (INT (1)));
+  assert_equal ~printer:id ("FLOAT " ^ (string_of_float 1.23)) (ParserUtil.string_of_token (FLOAT (1.23)));
+  assert_equal ~printer:id "PLUS" (ParserUtil.string_of_token (PLUS));
+  assert_equal ~printer:id "MINUS" (ParserUtil.string_of_token (MINUS));
+  assert_equal ~printer:id "IDENT \"foo\"" (ParserUtil.string_of_token (IDENT ("foo")));
+  assert_equal ~printer:id "STRING \"foo\"" (ParserUtil.string_of_token (STRING ("foo")));
+  assert_equal ~printer:id "STRING \"f\\\"oo\"" (ParserUtil.string_of_token (STRING ("f\"oo")));
+  assert_equal ~printer:id "STRING \"f\\noo\"" (ParserUtil.string_of_token (STRING ("f\noo")));
+  assert_equal ~printer:id "STRING \"f\\too\"" (ParserUtil.string_of_token (STRING ("f\too")));
+  assert_equal ~printer:id "TRUE" (ParserUtil.string_of_token (TRUE));
+  assert_equal ~printer:id "FALSE" (ParserUtil.string_of_token (FALSE));
+  assert_equal ~printer:id "UNDEF" (ParserUtil.string_of_token (UNDEF));
+  assert_equal ~printer:id "LAND" (ParserUtil.string_of_token (LAND));
+  assert_equal ~printer:id "LOR" (ParserUtil.string_of_token (LOR));
+  assert_equal ~printer:id "LNOT" (ParserUtil.string_of_token (LNOT));
+  assert_equal ~printer:id "LET" (ParserUtil.string_of_token (LET));
+  assert_equal ~printer:id "IN" (ParserUtil.string_of_token (IN));
+  assert_equal ~printer:id "RETURN" (ParserUtil.string_of_token (RETURN));
   ()
 
 let test_string_of_tokens _ =
-  assert_equal ~printer:id "INT 1; PLUS; INT 2" (ParserUtil.string_of_tokens [INT (1, noloc); PLUS noloc; INT (2, noloc)]);
+  assert_equal ~printer:id "INT 1; PLUS; INT 2" (ParserUtil.string_of_tokens [INT (1); PLUS; INT (2)]);
   assert_equal ~printer:id "INT 1; PLUS; INT 2; SEMICOLON"
-	(ParserUtil.string_of_tokens [INT (1, noloc); PLUS noloc; INT (2, noloc); SEMICOLON noloc]);
+	(ParserUtil.string_of_tokens [INT (1); PLUS; INT (2); SEMICOLON]);
   ()
-
-let otherloc = {
-  file = "(none)";
-  line = noloc.line + 10;
-  offset = noloc.offset + 20;
-  byte = noloc.byte + 30;
-}
 
 let test_egg_expr_equal _ =
   assert_equal true
 	(ParserUtil.egg_expr_equal
-	   (ExpLiteral (LitIdent "foo", noloc))
-	   (ExpLiteral (LitIdent "foo", otherloc)));
+	   (ExpLiteral (LitIdent "foo"))
+	   (ExpLiteral (LitIdent "foo")));
 
   assert_equal false
 	(ParserUtil.egg_expr_equal
-	   (ExpLiteral (LitIdent "foo", noloc))
-	   (ExpLiteral (LitIdent "bar", otherloc)));
+	   (ExpLiteral (LitIdent "foo"))
+	   (ExpLiteral (LitIdent "bar")));
 
   assert_equal true
 	(ParserUtil.egg_expr_equal
-	   (ExpLiteral (LitString "foo", noloc))
-	   (ExpLiteral (LitString "foo", otherloc)));
+	   (ExpLiteral (LitString "foo"))
+	   (ExpLiteral (LitString "foo")));
 
   assert_equal false
 	(ParserUtil.egg_expr_equal
-	   (ExpLiteral (LitString "foo", noloc))
-	   (ExpLiteral (LitString "bar", otherloc)));
+	   (ExpLiteral (LitString "foo"))
+	   (ExpLiteral (LitString "bar")));
 
   assert_equal true
 	(ParserUtil.egg_expr_equal
-	   (ExpLiteral (LitInt 1, noloc))
-	   (ExpLiteral (LitInt 1, otherloc)));
+	   (ExpLiteral (LitInt 1))
+	   (ExpLiteral (LitInt 1)));
 
   assert_equal false
 	(ParserUtil.egg_expr_equal
-	   (ExpLiteral (LitInt 2, noloc))
-	   (ExpLiteral (LitInt 3, otherloc)));
+	   (ExpLiteral (LitInt 2))
+	   (ExpLiteral (LitInt 3)));
 
   assert_equal false
 	(ParserUtil.egg_expr_equal
-	   (ExpLiteral (LitUndef, noloc))
-	   (ExpLiteral (LitUndef, otherloc)));
+	   (ExpLiteral (LitUndef))
+	   (ExpLiteral (LitUndef)));
   ()
 
 let _ = add_suites begin "ParserUtil" >::: [
@@ -106,81 +99,79 @@ let assert_eq_tokens expected actual =
   assert_equal ~printer:string_of_tokens expected actual
 
 let test_lex_float_lit _ =
-  assert_eq_tokens [FLOAT (1.23, noloc)] (tokens_from_string "1.23");
-  assert_eq_tokens [FLOAT (1.23e2 , noloc)] (tokens_from_string "1.23e2");
-  assert_eq_tokens [FLOAT (2.34e+2, noloc)] (tokens_from_string "2.34e+2");
-  assert_eq_tokens [FLOAT (3.45e-2, noloc)] (tokens_from_string "3.45e-2");
+  assert_eq_tokens [FLOAT (1.23)] (tokens_from_string "1.23");
+  assert_eq_tokens [FLOAT (1.23e2 )] (tokens_from_string "1.23e2");
+  assert_eq_tokens [FLOAT (2.34e+2)] (tokens_from_string "2.34e+2");
+  assert_eq_tokens [FLOAT (3.45e-2)] (tokens_from_string "3.45e-2");
   ()
 
 let test_lex_string_lit _ =
-  assert_eq_tokens [STRING ("foo"  , noloc)] (tokens_from_string "\"foo\"");
-  assert_eq_tokens [STRING ("f\"oo", noloc)] (tokens_from_string "\"f\\\"oo\"");
-  assert_eq_tokens [STRING ("f\noo", noloc)] (tokens_from_string "\"f\\noo\"");
-  assert_eq_tokens [STRING ("f\too", noloc)] (tokens_from_string "\"f\\too\"");
+  assert_eq_tokens [STRING ("foo"  )] (tokens_from_string "\"foo\"");
+  assert_eq_tokens [STRING ("f\"oo")] (tokens_from_string "\"f\\\"oo\"");
+  assert_eq_tokens [STRING ("f\noo")] (tokens_from_string "\"f\\noo\"");
+  assert_eq_tokens [STRING ("f\too")] (tokens_from_string "\"f\\too\"");
   ()
 
 let test_lex_bool_lit _ =
-  assert_eq_tokens [TRUE noloc] (tokens_from_string "true");
-  assert_eq_tokens [FALSE noloc] (tokens_from_string "false");
+  assert_eq_tokens [TRUE] (tokens_from_string "true");
+  assert_eq_tokens [FALSE] (tokens_from_string "false");
   ()
 
 let test_lex_undef_lit _ =
-  assert_eq_tokens [UNDEF noloc] (tokens_from_string "undefined");
+  assert_eq_tokens [UNDEF] (tokens_from_string "undefined");
   ()
 
 let test_lex_logical_op _ =
-  assert_eq_tokens [LAND noloc] (tokens_from_string "&&");
-  assert_eq_tokens [LOR noloc] (tokens_from_string "||");
-  assert_eq_tokens [LNOT noloc] (tokens_from_string "!");
+  assert_eq_tokens [LAND] (tokens_from_string "&&");
+  assert_eq_tokens [LOR] (tokens_from_string "||");
+  assert_eq_tokens [LNOT] (tokens_from_string "!");
   ()
 
 let test_simple_arith_exp _ =
-  assert_eq_tokens [INT (1, noloc); PLUS  noloc; INT (1, noloc)] (tokens_from_string "1+1");
-  assert_eq_tokens [INT (1, noloc); MINUS noloc; INT (2, noloc)] (tokens_from_string "1 - 2");
-  assert_eq_tokens [INT (3, noloc); MUL   noloc; INT (4, noloc)] (tokens_from_string "3 * 4");
-  assert_eq_tokens [INT (1, noloc); DIV   noloc; INT (2, noloc)] (tokens_from_string "1 / 2");
-  assert_eq_tokens [FLOAT (1.0, noloc); DIV noloc; INT (2, noloc)] (tokens_from_string "1.0 / 2");
+  assert_eq_tokens [INT (1); PLUS ; INT (1)] (tokens_from_string "1+1");
+  assert_eq_tokens [INT (1); MINUS; INT (2)] (tokens_from_string "1 - 2");
+  assert_eq_tokens [INT (3); MUL  ; INT (4)] (tokens_from_string "3 * 4");
+  assert_eq_tokens [INT (1); DIV  ; INT (2)] (tokens_from_string "1 / 2");
+  assert_eq_tokens [FLOAT (1.0); DIV; INT (2)] (tokens_from_string "1.0 / 2");
   ()
 
 let test_arith_exp _ =
-  assert_eq_tokens [INT (1, noloc); PLUS noloc; INT (2, noloc); MUL noloc; INT (3, noloc)]
+  assert_eq_tokens [INT (1); PLUS; INT (2); MUL; INT (3)]
 	(tokens_from_string "1+2*3");
   assert_eq_tokens
-	[LPAREN noloc; INT (1, noloc); PLUS noloc; INT (2, noloc); RPAREN noloc; MUL noloc; INT (3, noloc)]
+	[LPAREN; INT (1); PLUS; INT (2); RPAREN; MUL; INT (3)]
 	(tokens_from_string "(1+2)*3");
   ()
 
 let test_comp_exp _ =
-  assert_eq_tokens [INT (1, noloc); EQ noloc; INT (2, noloc)] (tokens_from_string "1=2");
-  assert_eq_tokens [INT (1, noloc); EQ noloc; INT (2, noloc)] (tokens_from_string "1==2");
-  assert_eq_tokens [INT (1, noloc); LT noloc; INT (2, noloc)] (tokens_from_string "1<2");
-  assert_eq_tokens [INT (1, noloc); GT noloc; INT (2, noloc)] (tokens_from_string "1 > 2");
-  assert_eq_tokens [INT (1, noloc); LE noloc; INT (2, noloc)] (tokens_from_string "1 <= 2");
-  assert_eq_tokens [INT (1, noloc); GE noloc; INT (2, noloc)] (tokens_from_string "1 >= 2");
+  assert_eq_tokens [INT (1); EQ; INT (2)] (tokens_from_string "1=2");
+  assert_eq_tokens [INT (1); EQ; INT (2)] (tokens_from_string "1==2");
+  assert_eq_tokens [INT (1); LT; INT (2)] (tokens_from_string "1<2");
+  assert_eq_tokens [INT (1); GT; INT (2)] (tokens_from_string "1 > 2");
+  assert_eq_tokens [INT (1); LE; INT (2)] (tokens_from_string "1 <= 2");
+  assert_eq_tokens [INT (1); GE; INT (2)] (tokens_from_string "1 >= 2");
   ()
 
 let test_delim_exp _ =
-  assert_eq_tokens [COMMA noloc; SEMICOLON noloc; DOT noloc] (tokens_from_string ",;.");
+  assert_eq_tokens [COMMA; SEMICOLON; DOT] (tokens_from_string ",;.");
   ()
 
 let test_comment _ =
-  assert_eq_tokens [INT (1, noloc)] (tokens_from_string "1 # foo");
+  assert_eq_tokens [INT (1)] (tokens_from_string "1 # foo");
   ()
 
 let test_return _ =
-  assert_eq_tokens [RETURN (noloc)] (tokens_from_string "return");
+  assert_eq_tokens [RETURN] (tokens_from_string "return");
   ()
 
 let test_lex_id _ =
-  assert_eq_tokens [IDENT ("foo"   , noloc)] (tokens_from_string "foo");
-  assert_eq_tokens [IDENT ("fOo"   , noloc)] (tokens_from_string "fOo");
-  assert_eq_tokens [IDENT ("foo123", noloc)] (tokens_from_string "foo123");
-  assert_eq_tokens [INT (1, noloc); PLUS noloc; IDENT ("foo", noloc)] (tokens_from_string "1+foo");
-  assert_eq_tokens [IDENT ("foo", noloc); INT (1, noloc)] (tokens_from_string "foo 1");
+  assert_eq_tokens [IDENT ("foo"   )] (tokens_from_string "foo");
+  assert_eq_tokens [IDENT ("fOo"   )] (tokens_from_string "fOo");
+  assert_eq_tokens [IDENT ("foo123")] (tokens_from_string "foo123");
+  assert_eq_tokens [INT (1); PLUS; IDENT ("foo")] (tokens_from_string "1+foo");
+  assert_eq_tokens [IDENT ("foo"); INT (1)] (tokens_from_string "foo 1");
   ()
 
-let test_lex_arith_with_loc _ =
-  noloc
 
 let _ = add_suites begin "Lexer" >::: [
   "lex_float_lit" >:: test_lex_float_lit;
@@ -216,55 +207,55 @@ let assert_eq_egg_expr expected exp_str =
 
 let test_parser_lit_id _ =
   assert_eq_egg_expr
-	(ExpLiteral (LitIdent "hoge", noloc))
+	(ExpLiteral (LitIdent "hoge"))
 	("hoge");
   ()
 
 let test_parser_lit_int _ =
   assert_eq_egg_expr
-	(ExpLiteral (LitInt 1, noloc))
+	(ExpLiteral (LitInt 1))
 	("1");
   ()
 
 let test_parser_lit_float _ =
   assert_eq_egg_expr
-	(ExpLiteral (LitFloat 2.3, noloc))
+	(ExpLiteral (LitFloat 2.3))
 	("2.3");
 
   ()
 
 let test_parser_lit_string _ =
   assert_eq_egg_expr
-	(ExpLiteral (LitString "hoge", noloc))
+	(ExpLiteral (LitString "hoge"))
 	("\"hoge\"");
 
   assert_eq_egg_expr
-	(ExpLiteral (LitString "ho\"ge", noloc))
+	(ExpLiteral (LitString "ho\"ge"))
 	("\"ho\\\"ge\"");
 
   ()
 
 let test_parser_lit_bool _ =
   assert_eq_egg_expr
-	(ExpLiteral (LitBool true, noloc))
+	(ExpLiteral (LitBool true))
 	("true");
 
   assert_eq_egg_expr
-	(ExpLiteral (LitBool false, noloc))
+	(ExpLiteral (LitBool false))
 	("false");
 
   ()
 
 let test_parser_lit_undef _ =
   assert_eq_egg_expr
-	(ExpLiteral (LitUndef, noloc))
+	(ExpLiteral (LitUndef))
 	("undefined");
 
   ()
 
 let test_parser_primary_expr _ =
   assert_eq_egg_expr
-	(ExpLiteral (LitInt 1, noloc))
+	(ExpLiteral (LitInt 1))
 	("(1)");
 
   ()
@@ -272,88 +263,73 @@ let test_parser_primary_expr _ =
 let test_parser_closure_expr _ =
   assert_eq_egg_expr
 	(ExpClosure (["a"; "b"],
-				 ExpSeq ([ExpLiteral (LitIdent "a", noloc);
-						  ExpLiteral (LitIdent "b", noloc)], noloc), noloc))
+				 ExpSeq ([ExpLiteral (LitIdent "a");
+						  ExpLiteral (LitIdent "b")])))
 	("lambda (a, b) { a; b }");
 
   assert_eq_egg_expr
-	(ExpClosure (["a"], ExpLiteral (LitIdent "a", noloc), noloc))
+	(ExpClosure (["a"], ExpLiteral (LitIdent "a")))
 	("lambda (a) { a }");
   ()
 
 let test_parser_apply_expr _ =
   assert_eq_egg_expr
-	(ExpApply (ExpLiteral (LitIdent "a", noloc),
-			   [],
-			   noloc))
+	(ExpApply (ExpLiteral (LitIdent "a"),
+			   []))
 	("a()");
 
   assert_eq_egg_expr
-	(ExpApply (ExpLiteral (LitIdent "a", noloc),
-			   [ExpLiteral (LitInt 1, noloc); ExpLiteral (LitInt 3, noloc); ExpLiteral (LitInt 4, noloc)],
-			   noloc))
+	(ExpApply (ExpLiteral (LitIdent "a"),
+			   [ExpLiteral (LitInt 1); ExpLiteral (LitInt 3); ExpLiteral (LitInt 4)]))
 	("a(1,3,4)");
 
   assert_eq_egg_expr
-	(ExpApply (ExpLiteral (LitIdent "print", noloc),
-			   [ExpLiteral (LitInt 1, noloc);
-				ExpLiteral (LitInt 2, noloc)],
-			   noloc))
+	(ExpApply (ExpLiteral (LitIdent "print"),
+			   [ExpLiteral (LitInt 1);
+				ExpLiteral (LitInt 2)]))
 	("print 1, 2");
 
   ()
 
 let test_parser_bind_expr _ =
   assert_eq_tokens
-	[BIND (noloc); IDENT ("foo", noloc); RARROW noloc; INT (1, noloc)]
+	[BIND; IDENT ("foo"); RARROW; INT (1)]
 	(tokens_from_string "bind foo -> 1");
 
   assert_eq_egg_expr
-	(ExpBind ([("foo", ExpLiteral (LitInt 1, noloc))],
-			  noloc))
+	(ExpBind (("foo", ExpLiteral (LitInt 1))))
 	("bind foo -> 1");
 
   assert_eq_egg_expr
-	(ExpBind ([("foo", ExpLiteral (LitInt 1, noloc));
-			   ("bar", ExpLiteral (LitInt 2, noloc))],
-			  noloc))
-	("bind foo -> 1, bar -> 2");
-
-  assert_eq_egg_expr
-	(ExpBind ([("foo",
-				ExpClosure (["a"; "b"; "c"],
-							ExpSeq ([ExpLiteral (LitIdent "a", noloc);
-									 ExpLiteral (LitIdent "b", noloc);
-									 ExpLiteral (LitIdent "c", noloc)], noloc),
-							noloc))],
-			  noloc))
+	(ExpBind (("foo",
+			   ExpClosure (["a"; "b"; "c"],
+						   ExpSeq ([ExpLiteral (LitIdent "a");
+									ExpLiteral (LitIdent "b");
+									ExpLiteral (LitIdent "c")])))))
 	("bind foo -> lambda (a,b,c) { a; b; c }");
 
   ()
 
 let test_parser_let_expr _ =
   assert_eq_tokens
-	[LET (noloc); IDENT ("foo", noloc); RARROW noloc; INT (1, noloc); IN (noloc); INT (2, noloc)]
+	[LET; IDENT ("foo"); RARROW; INT (1); IN; INT (2)]
 	(tokens_from_string "let foo -> 1 in 2");
 
   assert_eq_egg_expr
-	(ExpLet ([("foo", ExpLiteral (LitString "bar", noloc))],
-			 ExpLiteral (LitIdent "c", noloc),
-			 noloc))
+	(ExpLet (("foo", ExpLiteral (LitString "bar")),
+			 ExpLiteral (LitIdent "c")))
 	("let foo -> \"bar\" in c");
 
   assert_eq_egg_expr
-	(ExpLet ([("foo", ExpLiteral (LitString "bar", noloc));
-			  ("hoge", ExpLiteral (LitInt 1, noloc))],
-			 ExpLiteral (LitIdent "c", noloc),
-			 noloc))
+	(ExpLet (("foo", ExpLiteral (LitString "bar")),
+			 ExpLet (("hoge", ExpLiteral (LitInt 1)),
+					 ExpLiteral (LitIdent "c"))))
 	("let foo -> \"bar\", hoge -> 1 in c");
 
   assert_eq_egg_expr
-	(ExpLet ([("foo", ExpLiteral (LitString "bar", noloc));
-			  ("hoge", ExpLiteral (LitInt 1, noloc))],
-			 ExpLiteral (LitIdent "c", noloc),
-			 noloc))
+	(ExpLet (("foo", ExpLiteral (LitString "bar")),
+			 ExpLet (("hoge", ExpLiteral (LitInt 1)),
+					 ExpLiteral (LitIdent "c"))))
 	("let foo -> \"bar\", hoge -> 1 { c }");
 
   ()
@@ -361,72 +337,70 @@ let test_parser_let_expr _ =
 
 let test_parser_prefix_expr _ =
   assert_eq_egg_expr
-	(ExpPrefix (PrefixPlus, ExpLiteral (LitInt 1, noloc), noloc))
+	(ExpPrefix (PrefixPlus, ExpLiteral (LitInt 1)))
 	("+1");
 
   assert_eq_egg_expr
-	(ExpPrefix (PrefixMinus, ExpLiteral (LitInt 2, noloc), noloc))
+	(ExpPrefix (PrefixMinus, ExpLiteral (LitInt 2)))
 	("-2");
 
   assert_eq_egg_expr
-	(ExpPrefix (PrefixLnot, ExpLiteral (LitBool true, noloc), noloc))
+	(ExpPrefix (PrefixLnot, ExpLiteral (LitBool true)))
 	("! true");
 
   assert_eq_egg_expr
-	(ExpPrefix (PrefixPlus, ExpLiteral (LitInt 1, noloc), noloc))
+	(ExpPrefix (PrefixPlus, ExpLiteral (LitInt 1)))
 	("+ (1)");
 
   ()
 
 let test_parser_infix_expr _ =
   assert_eq_egg_expr
-	(ExpInfix (InfixPlus, ExpLiteral (LitInt 1, noloc), ExpLiteral (LitInt 2, noloc), noloc))
+	(ExpInfix (InfixPlus, ExpLiteral (LitInt 1), ExpLiteral (LitInt 2)))
 	("1 + 2");
 
   assert_eq_egg_expr
-	(ExpInfix (InfixMinus, ExpLiteral (LitInt 1, noloc), ExpLiteral (LitInt 2, noloc), noloc))
+	(ExpInfix (InfixMinus, ExpLiteral (LitInt 1), ExpLiteral (LitInt 2)))
 	("1 - 2");
 
   assert_eq_egg_expr
-	(ExpInfix (InfixMul, ExpLiteral (LitInt 3, noloc), ExpLiteral (LitInt 2, noloc), noloc))
+	(ExpInfix (InfixMul, ExpLiteral (LitInt 3), ExpLiteral (LitInt 2)))
 	("3 * 2");
   
   assert_eq_egg_expr
-	(ExpInfix (InfixDiv, ExpLiteral (LitInt 3, noloc), ExpLiteral (LitFloat 2.0, noloc), noloc))
+	(ExpInfix (InfixDiv, ExpLiteral (LitInt 3), ExpLiteral (LitFloat 2.0)))
 	("3 / 2.0");
   
   assert_eq_egg_expr
-	(ExpInfix (InfixMinus, (ExpInfix (InfixPlus, ExpLiteral (LitInt 1, noloc), ExpLiteral (LitInt 2, noloc), noloc)), ExpLiteral (LitInt 3, noloc), noloc))
+	(ExpInfix (InfixMinus, (ExpInfix (InfixPlus, ExpLiteral (LitInt 1), ExpLiteral (LitInt 2))), ExpLiteral (LitInt 3)))
 	("1 + 2 - 3");
 
   assert_eq_egg_expr
 	(ExpInfix (InfixMinus,
 			   (ExpInfix (InfixMinus,
-						  ExpLiteral (LitInt 1, noloc),
-						  ExpLiteral (LitInt 2, noloc), noloc)),
-			   ExpLiteral (LitInt 3, noloc), noloc))
+						  ExpLiteral (LitInt 1),
+						  ExpLiteral (LitInt 2))),
+			   ExpLiteral (LitInt 3)))
 	("1 - 2 - 3");
 
   assert_eq_egg_expr
 	(ExpInfix (InfixMinus,
 		  ExpInfix (InfixPlus,
-						  ExpLiteral (LitInt 1, noloc),
-						  ExpLiteral (LitInt 2, noloc), noloc),
+						  ExpLiteral (LitInt 1),
+						  ExpLiteral (LitInt 2)),
 		  ExpInfix (InfixMul,
 					ExpInfix (InfixDiv,
-							  ExpLiteral (LitInt 3, noloc),
-							  ExpLiteral (LitInt 4, noloc), noloc),
+							  ExpLiteral (LitInt 3),
+							  ExpLiteral (LitInt 4)),
 					ExpInfix (InfixPlus,
-							  ExpLiteral (LitInt 5, noloc),
-							  ExpLiteral (LitInt 6, noloc), noloc),
-					noloc),
-		  noloc))
+							  ExpLiteral (LitInt 5),
+							  ExpLiteral (LitInt 6)))))
 	("1 + 2 - 3 / 4 * (5 + 6)");
 
   assert_eq_egg_expr
 	(ExpInfix (InfixPlus,
-			   ExpLiteral (LitInt 1, noloc),
-			   (parse_string "foo(2,3)"), noloc))
+			   ExpLiteral (LitInt 1),
+			   (parse_string "foo(2,3)")))
 	("1 + foo(2,3)");
 
   ()
@@ -434,71 +408,68 @@ let test_parser_infix_expr _ =
 let test_parser_infix_expr_mul_div _ =
   assert_eq_egg_expr
 	(ExpInfix (InfixMul,
-			   ExpLiteral (LitInt 1, noloc),
-			   ExpLiteral (LitInt 2, noloc), noloc))
+			   ExpLiteral (LitInt 1),
+			   ExpLiteral (LitInt 2)))
 	("1 * 2");
 
   assert_eq_egg_expr
 	(ExpInfix (InfixMinus,
 			   (ExpInfix (InfixMinus,
-						  ExpLiteral (LitInt 1, noloc),
+						  ExpLiteral (LitInt 1),
 						  (ExpInfix (InfixMul,
-									 ExpLiteral (LitInt 2, noloc),
-									 ExpLiteral (LitInt 3, noloc), noloc)),
-						  noloc)),
-			   ExpLiteral (LitInt 4, noloc),
-			   noloc))
+									 ExpLiteral (LitInt 2),
+									 ExpLiteral (LitInt 3))))),
+			   ExpLiteral (LitInt 4)))
 	("1 - 2 * 3 - 4");
 
   assert_eq_egg_expr
-	(ExpInfix (InfixMinus, (ExpInfix (InfixPlus, ExpLiteral (LitInt 1, noloc), ExpLiteral (LitInt 2, noloc), noloc)), ExpLiteral (LitInt 3, noloc), noloc))
+	(ExpInfix (InfixMinus, (ExpInfix (InfixPlus, ExpLiteral (LitInt 1), ExpLiteral (LitInt 2))), ExpLiteral (LitInt 3)))
 	("1 + 2 - 3");
   ()
 
 let test_parser_infix_comp_expr _ =
   assert_eq_egg_expr
 	(ExpInfix (InfixEq,
-			   ExpLiteral (LitInt 1, noloc),
-			   ExpLiteral (LitInt 2, noloc), noloc))
+			   ExpLiteral (LitInt 1),
+			   ExpLiteral (LitInt 2)))
 	("1 = 2");
 
   assert_eq_egg_expr
 	(ExpInfix (InfixEq,
-			   ExpLiteral (LitInt 1, noloc),
-			   ExpLiteral (LitInt 2, noloc), noloc))
+			   ExpLiteral (LitInt 1),
+			   ExpLiteral (LitInt 2)))
 	("1 == 2");
 
   assert_eq_egg_expr
 	(ExpInfix (InfixLt,
-			   ExpLiteral (LitInt 1, noloc),
-			   ExpLiteral (LitInt 2, noloc), noloc))
+			   ExpLiteral (LitInt 1),
+			   ExpLiteral (LitInt 2)))
 	("1 < 2");
 
   assert_eq_egg_expr
 	(ExpInfix (InfixGt,
-			   ExpLiteral (LitInt 1, noloc),
-			   ExpLiteral (LitInt 2, noloc), noloc))
+			   ExpLiteral (LitInt 1),
+			   ExpLiteral (LitInt 2)))
 	("1 > 2");
 
   assert_eq_egg_expr
 	(ExpInfix (InfixLe,
-			   ExpLiteral (LitInt 1, noloc),
-			   ExpLiteral (LitInt 2, noloc), noloc))
+			   ExpLiteral (LitInt 1),
+			   ExpLiteral (LitInt 2)))
 	("1 <= 2");
 
   assert_eq_egg_expr
 	(ExpInfix (InfixGe,
-			   ExpLiteral (LitInt 1, noloc),
-			   ExpLiteral (LitInt 2, noloc), noloc))
+			   ExpLiteral (LitInt 1),
+			   ExpLiteral (LitInt 2)))
 	("1 >= 2");
 
   assert_eq_egg_expr
 	(ExpInfix (InfixLt,
 			   (ExpInfix (InfixLt,
-						  ExpLiteral (LitInt 1, noloc),
-						  ExpLiteral (LitInt 2, noloc), noloc)),
-			   ExpLiteral (LitInt 3, noloc),
-			   noloc))
+						  ExpLiteral (LitInt 1),
+						  ExpLiteral (LitInt 2))),
+			   ExpLiteral (LitInt 3)))
 	("1 < 2 < 3");
 
   ()
@@ -507,19 +478,19 @@ let test_parser_infix_comp_arith_expr _ =
   assert_eq_egg_expr
 	(ExpInfix (InfixEq,
 			   (parse_string "1+2"),
-			   (parse_string "-2"), noloc))
+			   (parse_string "-2")))
 	("1+2 = -2");
 
   assert_eq_egg_expr
 	(ExpInfix (InfixLt,
 			   (parse_string "1+2"),
-			   (parse_string "-2"), noloc))
+			   (parse_string "-2")))
 	("1+2 < -2");
 
   assert_eq_egg_expr
 	(ExpInfix (InfixGt,
 			   (parse_string "3+4"),
-			   (parse_string "5*6"), noloc))
+			   (parse_string "5*6")))
 	("3+4 > 5*6");
 
   ()
@@ -527,23 +498,22 @@ let test_parser_infix_comp_arith_expr _ =
 let test_parser_infix_logi_expr _ =
   assert_eq_egg_expr
 	(ExpInfix (InfixLand,
-			   ExpLiteral (LitBool true, noloc),
-			   ExpLiteral (LitBool false, noloc), noloc))
+			   ExpLiteral (LitBool true),
+			   ExpLiteral (LitBool false)))
 	("true && false");
 
   assert_eq_egg_expr
 	(ExpInfix (InfixLor,
-			   ExpLiteral (LitBool true, noloc),
-			   ExpLiteral (LitBool false, noloc), noloc))
+			   ExpLiteral (LitBool true),
+			   ExpLiteral (LitBool false)))
 	("true || false");
 
   assert_eq_egg_expr
 	(ExpInfix (InfixLand,
 			   (ExpInfix (InfixLand,
-						  ExpLiteral (LitInt 1, noloc),
-						  ExpLiteral (LitInt 2, noloc), noloc)),
-			   ExpLiteral (LitBool false, noloc),
-			   noloc))
+						  ExpLiteral (LitInt 1),
+						  ExpLiteral (LitInt 2))),
+			   ExpLiteral (LitBool false)))
 	("1 && 2 && false");
 
   ()
@@ -552,13 +522,13 @@ let test_parser_infix_logi_comp_expr _ =
   assert_eq_egg_expr
 	(ExpInfix (InfixLand,
 			   (parse_string "1 < 2"),
-			   (parse_string "2 > 3"), noloc))
+			   (parse_string "2 > 3")))
 	("1 < 2 && 2 > 3");
 
   assert_eq_egg_expr
 	(ExpInfix (InfixLand,
 			   (parse_string "1+2 < 3*4"),
-			   (parse_string "5/6 > -7"), noloc))
+			   (parse_string "5/6 > -7")))
 	("1+2 < 3*4 && 5/6 > -7");
 
   ()
@@ -566,129 +536,94 @@ let test_parser_infix_logi_comp_expr _ =
 let test_parser_prefix_infix_expr _ =
   assert_eq_egg_expr
 	(ExpInfix (InfixPlus,
-			   ExpPrefix (PrefixPlus, ExpLiteral (LitInt 1, noloc), noloc),
-			   ExpLiteral (LitInt 2, noloc),
-			   noloc))
+			   ExpPrefix (PrefixPlus, ExpLiteral (LitInt 1)),
+			   ExpLiteral (LitInt 2)))
 	("+1 + 2");
 
   assert_eq_egg_expr
 	(ExpInfix (InfixPlus,
-			   ExpPrefix (PrefixMinus, ExpLiteral (LitInt 3, noloc), noloc),
+			   ExpPrefix (PrefixMinus, ExpLiteral (LitInt 3)),
 			   ExpInfix (InfixMul,
-						 ExpLiteral (LitInt 4, noloc),
-						 ExpPrefix (PrefixMinus, ExpLiteral (LitInt 2, noloc), noloc),
-						 noloc),
-			   noloc))
+						 ExpLiteral (LitInt 4),
+						 ExpPrefix (PrefixMinus, ExpLiteral (LitInt 2)))))
 	("-3 + 4 * -2");
 
   ()
 
 let test_parser_compound_expr _ =
   assert_eq_egg_expr
-	(ExpSeq ([ExpLiteral (LitIdent "a", noloc);
-			  ExpLiteral (LitIdent "b", noloc);
-			  ExpLiteral (LitInt   1, noloc)], noloc))
+	(ExpSeq ([ExpLiteral (LitIdent "a");
+			  ExpLiteral (LitIdent "b");
+			  ExpLiteral (LitInt   1)]))
 	("a;b; 1");
 
   ()
 
 let test_parser_block_expr _ =
   assert_eq_egg_expr
-	(ExpSeq ([ExpLiteral (LitIdent "a", noloc);
-			  ExpLiteral (LitIdent "b", noloc);
-			  ExpLiteral (LitInt   1, noloc)], noloc))
+	(ExpSeq ([ExpLiteral (LitIdent "a");
+			  ExpLiteral (LitIdent "b");
+			  ExpLiteral (LitInt   1)]))
 	("{ a;b; 1}");
 
   ()
 
 let test_parser_if_expr _ =
   assert_eq_tokens
-	[IF (noloc); IDENT ("a", noloc); IDENT ("b", noloc)]
-	(tokens_from_string "if a b");
+	[IF; IDENT ("a"); IDENT ("b"); ELSE; IDENT ("c")]
+	(tokens_from_string "if a b else c");
 
   assert_eq_egg_expr
-	(ExpIf (ExpLiteral (LitIdent "a", noloc),
-			ExpLiteral (LitIdent "b", noloc),
-			ExpNop,
-			noloc))
-	"if a { b }";
-
-  assert_eq_egg_expr
-	(ExpIf (ExpLiteral (LitIdent "a", noloc),
-			ExpLiteral (LitIdent "b", noloc),
-			ExpNop,
-			noloc))
-	"if a b";
-
-  assert_eq_egg_expr
-	(ExpIf (ExpLiteral (LitIdent "a", noloc),
-			ExpSeq ([ExpLiteral (LitIdent "b", noloc);
-					 ExpLiteral (LitIdent "c", noloc);],
-					noloc),
-			ExpNop,
-			noloc))
-	"if a { b; c }";
-
-  assert_eq_egg_expr
-	(ExpIf (ExpLiteral (LitIdent "a", noloc),
-			ExpLiteral (LitIdent "b", noloc),
-			ExpLiteral (LitIdent "c", noloc),
-			noloc))
+	(ExpIf (ExpLiteral (LitIdent "a"),
+			ExpLiteral (LitIdent "b"),
+			ExpLiteral (LitIdent "c")))
 	"if a { b } else { c }";
 
   assert_eq_egg_expr
-	(ExpIf (ExpLiteral (LitIdent "a", noloc),
-			ExpLiteral (LitIdent "b", noloc),
-			ExpIf (ExpLiteral (LitIdent "c", noloc),
-				   ExpLiteral (LitIdent "d", noloc),
-				   ExpLiteral (LitIdent "f", noloc),
-				   noloc),
-			noloc))
+	(ExpIf (ExpLiteral (LitIdent "a"),
+			ExpLiteral (LitIdent "b"),
+			ExpIf (ExpLiteral (LitIdent "c"),
+				   ExpLiteral (LitIdent "d"),
+				   ExpLiteral (LitIdent "f"))))
 	"if a { b } else if c { d } else f";
 
   assert_eq_egg_expr
 	(ExpIf (parse_string "1+2 == 3",
-			ExpLiteral (LitIdent "b", noloc),
-			ExpNop,
-			noloc))
-	"if 1+2 == 3 { b }";
+			ExpLiteral (LitIdent "b"),
+			ExpLiteral (LitIdent "d")))
+	"if 1+2 == 3 { b } else { d }";
 
   assert_eq_egg_expr
 	(ExpIf (parse_string "1+2 == 3",
-			ExpLiteral (LitIdent "b", noloc),
-			ExpIf (ExpLiteral (LitIdent "c", noloc),
-				   ExpLiteral (LitIdent "d", noloc),
-				   ExpLiteral (LitIdent "f", noloc),
-				   noloc),
-			noloc))
+			ExpLiteral (LitIdent "b"),
+			ExpIf (ExpLiteral (LitIdent "c"),
+				   ExpLiteral (LitIdent "d"),
+				   ExpLiteral (LitIdent "f"))))
 	"if 1+2 == 3 { b } else if c { d } else f";
 
   assert_eq_egg_expr
 	(ExpIf (parse_string "1+2 == 3",
-			ExpLiteral (LitIdent "b", noloc),
-			ExpIf (ExpLiteral (LitIdent "c", noloc),
-				   ExpLiteral (LitIdent "d", noloc),
-				   ExpLiteral (LitIdent "f", noloc),
-				   noloc),
-			noloc))
+			ExpLiteral (LitIdent "b"),
+			ExpIf (ExpLiteral (LitIdent "c"),
+				   ExpLiteral (LitIdent "d"),
+				   ExpLiteral (LitIdent "f"))))
 	"if (1+2 == 3) { b } else if c { d } else f";
 
   ()
 
 let test_parser_return_expr _ =
   assert_eq_egg_expr
-	(ExpReturn (ExpLiteral (LitUndef, noloc), noloc))
+	(ExpReturn (ExpLiteral (LitUndef)))
 	"return";
 
   assert_eq_egg_expr
-	(ExpReturn (ExpLiteral (LitInt 1, noloc), noloc))
+	(ExpReturn (ExpLiteral (LitInt 1)))
 	"return 1";
 
   assert_eq_egg_expr
 	(ExpSeq ([parse_string "1+2";
-			  (ExpReturn (ExpLiteral (LitInt 1, noloc), noloc));
-			  parse_string "4+5"],
-			 noloc))
+			  (ExpReturn (ExpLiteral (LitInt 1)));
+			  parse_string "4+5"]))
 	"{ 1+2; return 1; 4+5 }";
 
   ()
@@ -722,57 +657,23 @@ let _ = add_suites begin "Parser" >::: [
 
 
 
-(* test of semantic.ml *)
-open Semantic
+(* test of translator.ml *)
 
-let assert_sem_type typ exp_str =
-  assert_equal typ (Semantic.solve_type (parse_string exp_str))
-	~msg:("Solving type of expr: " ^ exp_str)
+(* open Translator *)
+(* open Vm *)
 
-let test_sem_solve_type _ =
-  assert_sem_type TypUnsolved "foo";
-  assert_sem_type TypUnsolved "1 + foo";
-  assert_sem_type TypUnsolved "undefined";
+(* let assert_eq_vminsns expected exp_str = *)
+(*   assert_equal ~printer:string_of_vminsns expected *)
+(* 	(translate (parse_string exp_str)) *)
 
-  assert_sem_type TypInt "1";
-  assert_sem_type TypInt "-1";
-  assert_sem_type TypInt "+2";
-  assert_sem_type TypInt "1 + 2";
-  assert_sem_type TypInt "1 + 2 * 3 - 4";
-  assert_sem_type TypInt "1 + 2 * (3 - 4) / 5";
+(* let test_trans_simple_exp _ = *)
 
-  assert_sem_type TypFloat "1.0";
-  assert_sem_type TypFloat "1.0e2";
-  assert_sem_type TypFloat "1.0e2 + 2.0";
-  assert_sem_type TypFloat "1.0e2 + 1";
-  assert_sem_type TypFloat "3 * 1.0e2";
-  assert_sem_type TypFloat "(3 * 1.0e2)";
+(*   () *)
 
-  assert_sem_type TypString "\"hoge\"";
-  assert_sem_type TypString "\"hoge\" + \"foo\"";
-  assert_sem_type TypString "\"hoge\" * 3";
+(* let _ = add_suites begin "Translator" >::: [ *)
+(*   "trans_simple_exp" >:: test_trans_simple_exp; *)
+(* ] end *)
 
-  assert_sem_type TypBool "true";
-  assert_sem_type TypBool "false";
-  assert_sem_type TypBool "! false";
-  assert_sem_type TypBool "! 1";
-
-  assert_sem_type TypInt "1 < 2";
-  assert_sem_type TypInt "1 = 2";
-  assert_sem_type TypInt "1 >= 2";
-
-  assert_sem_type TypFloat "1.0 < 2.0";
-
-  assert_sem_type TypBool "\"foo\" = \"bar\"";
-
-  assert_sem_type TypClosure "lambda (a) { b }";
-
-  ()
-
-
-let _ = add_suites begin "Semantic" >::: [
-  "sem_solve_type" >:: test_sem_solve_type;
-] end
 
 
 let _ =
@@ -781,4 +682,4 @@ let _ =
 	   let _ = run_test_tt ~verbose:false suite
 	   in ()
 	)
-	!suites
+	(List.rev !suites)

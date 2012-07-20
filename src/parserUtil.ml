@@ -1,6 +1,6 @@
 
 open Parser
-open Tree
+open Syntax
 
 let quote_string str =
   (Str.global_replace
@@ -11,34 +11,34 @@ let quote_string str =
 
 let string_of_token tok =
   match tok with
-	  INT (x, noloc) -> "INT " ^ (string_of_int x)
-	| FLOAT (x, noloc) -> "FLOAT " ^ (string_of_float x)
-	| STRING (str, noloc) -> "STRING \"" ^ (quote_string str) ^ "\""
-	| TRUE noloc  -> "TRUE"
-	| FALSE noloc -> "FALSE"
-	| UNDEF noloc -> "UNDEF"
-	| PLUS noloc  -> "PLUS"
-	| MINUS noloc -> "MINUS"
-	| MUL noloc  -> "MUL"
-	| DIV noloc  -> "DIV"
-	| LAND noloc -> "LAND"
-	| LOR  noloc -> "LOR"
-	| LNOT noloc -> "LNOT"
-	| LPAREN noloc  -> "LPAREN"
-	| RPAREN noloc  -> "RPAREN"
-	| LBRAKET noloc -> "LBRAKET"
-	| RBRAKET noloc -> "RBRAKET"
-	| LBRACE noloc  -> "LBRACE"
-	| RBRACE noloc  -> "RBRACE"
-	| COMMA noloc   -> "COMMA"
-	| SEMICOLON noloc -> "SEMICOLON"
-	| DOT noloc -> "DOT"
-	| EQ noloc -> "EQ"
-	| LE noloc -> "LE"
-	| GE noloc -> "GE"
-	| LT noloc -> "LT"
-	| GT noloc -> "GT"
-	| IDENT (id, noloc) -> "IDENT \"" ^ id ^ "\""
+	  INT (x) -> "INT " ^ (string_of_int x)
+	| FLOAT (x) -> "FLOAT " ^ (string_of_float x)
+	| STRING (str) -> "STRING \"" ^ (quote_string str) ^ "\""
+	| TRUE  -> "TRUE"
+	| FALSE -> "FALSE"
+	| UNDEF -> "UNDEF"
+	| PLUS  -> "PLUS"
+	| MINUS -> "MINUS"
+	| MUL  -> "MUL"
+	| DIV  -> "DIV"
+	| LAND -> "LAND"
+	| LOR  -> "LOR"
+	| LNOT -> "LNOT"
+	| LPAREN  -> "LPAREN"
+	| RPAREN  -> "RPAREN"
+	| LBRAKET -> "LBRAKET"
+	| RBRAKET -> "RBRAKET"
+	| LBRACE  -> "LBRACE"
+	| RBRACE  -> "RBRACE"
+	| COMMA   -> "COMMA"
+	| SEMICOLON -> "SEMICOLON"
+	| DOT -> "DOT"
+	| EQ -> "EQ"
+	| LE -> "LE"
+	| GE -> "GE"
+	| LT -> "LT"
+	| GT -> "GT"
+	| IDENT (id) -> "IDENT \"" ^ id ^ "\""
 	| LAMBDA _   -> "LAMBDA"
 	| IF _       -> "IF"
 	| ELSE _     -> "ELSE"
@@ -47,7 +47,7 @@ let string_of_token tok =
 	| RARROW _   -> "RARROW"
 	| IN _       -> "IN"
 	| RETURN _   -> "RETURN"
-	| EOF noloc  -> "EOF"
+	| EOF  -> "EOF"
 	(* | _ -> "UNKNOWN_TOKEN" *)
 ;;
 
@@ -95,48 +95,41 @@ let rec string_of_expr ?(indent = 0) e =
   let is = String.make indent ' '
   in
   match e with
-	  ExpLiteral (lit, loc) -> is ^ "Literal " ^ (string_of_literal lit)
-	| ExpClosure (params, body_expr, _) ->
+	  ExpLiteral (lit) -> is ^ "Literal " ^ (string_of_literal lit)
+	| ExpClosure (params, body_expr) ->
 		is ^ "Closure (" ^ (String.concat "," params) ^ ") {\n" ^
 		  (string_of_expr body_expr ~indent:(indent+2)) ^ "\n" ^
 		  is ^ "}"
-	| ExpApply (f, args, _) ->
+	| ExpApply (f, args) ->
 		"Apply " ^ (string_of_expr f) ^ "(" ^ (String.concat "," (List.map string_of_expr args)) ^ ")"
-	| ExpBind (bindings, _) ->
-		is ^ "Bind" ^ "\n" ^
-		  (String.concat "\n"
-			 (List.map (fun (id, e) ->
-						  is ^ "  " ^ id ^ " ->\n" ^
-							(string_of_expr e ~indent:(indent+4)))
-				bindings))
-	| ExpLet (bindings, body, _) ->
+	| ExpBind ((id, v)) ->
+		is ^ "Bind: " ^ id ^ " ->\n" ^
+		  (string_of_expr v ~indent:(indent+4)) ^ "\n"
+	| ExpLet ((id, v), body) ->
 		is ^ "Let" ^ "\n" ^
-		  (String.concat "\n"
-			 (List.map (fun (id, e) ->
-						  is ^ "  " ^ id ^ " ->\n" ^
-							(string_of_expr e ~indent:(indent+4)))
-				bindings)) ^ "\n" ^
+		  is ^ "  " ^ id ^ " ->\n" ^
+		  (string_of_expr v ~indent:(indent+4)) ^ "\n" ^
 		  (string_of_expr body ~indent:(indent+2))
-	| ExpPrefix (op, e, _) ->
+	| ExpPrefix (op, e) ->
 		is ^ "Prefix: " ^ (string_of_prefix_oper op) ^ "\n" ^
 		  (string_of_expr e ~indent:(indent+2))
-	| ExpInfix (op, e1, e2, _) ->
+	| ExpInfix (op, e1, e2) ->
 		is ^ "Infix: " ^ (string_of_infix_oper op) ^ "\n" ^
 		  (string_of_expr e1 ~indent:(indent+2)) ^ "\n" ^
 		  (string_of_expr e2 ~indent:(indent+2))
-	| ExpSeq (es, _) ->
+	| ExpSeq (es) ->
 		is ^ "Seq " ^ "\n" ^
 		  (String.concat "\n" (List.map (fun e -> string_of_expr e ~indent:(indent+2)) es ))
-	| ExpIf  (cond, if_clause, ExpNop, _) ->
+	| ExpIf  (cond, if_clause, ExpNop) ->
 		is ^ "If" ^ "\n" ^
 		  (string_of_expr cond ~indent:(indent+2)) ^ "\n" ^
 		  (string_of_expr if_clause ~indent:(indent+2))
-	| ExpIf  (cond, if_clause, else_clause, _) ->
+	| ExpIf  (cond, if_clause, else_clause) ->
 		is ^ "If" ^ "\n" ^
 		  (string_of_expr cond ~indent:(indent+2)) ^ "\n" ^
 		  (string_of_expr if_clause ~indent:(indent+2)) ^ "\n" ^
 		  (string_of_expr else_clause ~indent:(indent+2))
-	| ExpReturn (e, _) ->
+	| ExpReturn (e) ->
 		is ^ "Return" ^ "\n" ^
 		  (string_of_expr e ~indent:(indent+2))
 	| _ -> raise (Failure "string_of_expr not implemented")
@@ -155,7 +148,7 @@ let egg_literal_equal lit1 lit2 =
 
 let egg_expr_equal e1 e2 =
   match (e1, e2) with
-	  (ExpLiteral (lit1, _), ExpLiteral (lit2, _)) ->
+	  (ExpLiteral (lit1), ExpLiteral (lit2)) ->
 		egg_literal_equal lit1 lit2
 	| _ ->
 		raise (Failure "egg_expr_equal not implemented")
