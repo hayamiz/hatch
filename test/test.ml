@@ -30,6 +30,7 @@ let test_string_of_token _ =
   assert_equal ~printer:id "LNOT" (ParserUtil.string_of_token (LNOT noloc));
   assert_equal ~printer:id "LET" (ParserUtil.string_of_token (LET noloc));
   assert_equal ~printer:id "IN" (ParserUtil.string_of_token (IN noloc));
+  assert_equal ~printer:id "RETURN" (ParserUtil.string_of_token (RETURN noloc));
   ()
 
 let test_string_of_tokens _ =
@@ -166,6 +167,10 @@ let test_comment _ =
   assert_eq_tokens [INT (1, noloc)] (tokens_from_string "1 # foo");
   ()
 
+let test_return _ =
+  assert_eq_tokens [RETURN (noloc)] (tokens_from_string "return");
+  ()
+
 let test_lex_id _ =
   assert_eq_tokens [IDENT ("foo"   , noloc)] (tokens_from_string "foo");
   assert_eq_tokens [IDENT ("fOo"   , noloc)] (tokens_from_string "fOo");
@@ -188,6 +193,7 @@ let _ = add_suites begin "Lexer" >::: [
   "comp_exp" >:: test_comp_exp;
   "delim_exp" >:: test_delim_exp;
   "comment" >:: test_comment;
+  "return" >:: test_return;
   "lex_id" >:: test_lex_id;
 ] end
 
@@ -664,6 +670,24 @@ let test_parser_if_expr _ =
 
   ()
 
+let test_parser_return_expr _ =
+  assert_eq_egg_expr
+	(ExpReturn (ExpLiteral (LitUndef, noloc), noloc))
+	"return";
+
+  assert_eq_egg_expr
+	(ExpReturn (ExpLiteral (LitInt 1, noloc), noloc))
+	"return 1";
+
+  assert_eq_egg_expr
+	(ExpSeq ([parse_string "1+2";
+			  (ExpReturn (ExpLiteral (LitInt 1, noloc), noloc));
+			  parse_string "4+5"],
+			 noloc))
+	"{ 1+2; return 1; 4+5 }";
+
+  ()
+
 
 let _ = add_suites begin "Parser" >::: [
   "parser_lit_id" >:: test_parser_lit_id;
@@ -688,6 +712,7 @@ let _ = add_suites begin "Parser" >::: [
   "parser_compound_expr" >:: test_parser_compound_expr;
   "parser_block_expr" >:: test_parser_block_expr;
   "parser_if_expr" >:: test_parser_if_expr;
+  "parser_return_expr" >:: test_parser_return_expr;
 ] end
 
 

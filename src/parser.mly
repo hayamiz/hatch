@@ -49,6 +49,7 @@
 %token <Tree.location> LAMBDA
 %token <Tree.location> IF ELSE
 %token <Tree.location> BIND RARROW LET IN
+%token <Tree.location> RETURN
 %token <Tree.location> EOF
 %left LAND LOR          /* 5th precedence */
 %left EQ LE GE LT GT    /* 4th precedence */
@@ -79,6 +80,7 @@ expr:
   | infix_expr        { $1 }
   | block_expr        { $1 }
   | if_expr           { $1 }
+  | return_expr       { $1 }
 
 primary_expr:
     literal             { $1 }
@@ -147,6 +149,10 @@ if_expr:
     IF cond_expr expr ELSE expr  { ExpIf ($2, $3, $5, noloc) }
   | IF cond_expr expr            { ExpIf ($2, $3, ExpNop, noloc) }
 ;
+
+return_expr:
+    RETURN expr  { ExpReturn ($2, noloc) }
+  | RETURN       { ExpReturn (ExpLiteral (LitUndef, noloc), noloc) }
 
 %%
 

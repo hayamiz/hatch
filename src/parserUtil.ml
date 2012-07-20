@@ -46,6 +46,7 @@ let string_of_token tok =
 	| LET _      -> "LET"
 	| RARROW _   -> "RARROW"
 	| IN _       -> "IN"
+	| RETURN _   -> "RETURN"
 	| EOF noloc  -> "EOF"
 	(* | _ -> "UNKNOWN_TOKEN" *)
 ;;
@@ -135,6 +136,9 @@ let rec string_of_expr ?(indent = 0) e =
 		  (string_of_expr cond ~indent:(indent+2)) ^ "\n" ^
 		  (string_of_expr if_clause ~indent:(indent+2)) ^ "\n" ^
 		  (string_of_expr else_clause ~indent:(indent+2))
+	| ExpReturn (e, _) ->
+		is ^ "Return" ^ "\n" ^
+		  (string_of_expr e ~indent:(indent+2))
 	| _ -> raise (Failure "string_of_expr not implemented")
 ;;
 

@@ -24,6 +24,7 @@ rule token = parse
   | "bind"         { BIND noloc }
   | "let"          { LET noloc }
   | "in"           { IN noloc }
+  | "return"       { RETURN noloc }
   | "->"           { RARROW noloc }
   | "if"           { IF noloc }
   | "else"         { ELSE noloc }
