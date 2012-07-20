@@ -1024,6 +1024,38 @@ let test_beta_reduce _ =
   assert_eq_beta
 	(NexpLet ("x",
 			  NexpInt 1,
+			  NexpLet ("y",
+					   NexpInt 2,
+					   NexpVar "x")))
+	(Beta.beta_reduce
+	   (NexpLet ("x",
+				 NexpInt 1,
+				 NexpLet ("y",
+						  NexpInt 2,
+						  NexpLet ("z",
+								   NexpVar "x",
+								   NexpVar "z")))))
+  ;
+
+  assert_eq_beta
+	(NexpLet ("x",
+			  NexpInt 1,
+			  NexpLet ("y",
+					   NexpInt 2,
+					   NexpVar "w")))
+	(Beta.beta_reduce
+	   (NexpLet ("x",
+				 NexpInt 1,
+				 NexpLet ("y",
+						  NexpInt 2,
+						  NexpLet ("z",
+								   NexpVar "x",
+								   NexpVar "w")))))
+  ;
+
+  assert_eq_beta
+	(NexpLet ("x",
+			  NexpInt 1,
 			  NexpLambda (["z"],
 						  NexpVar "x")))
 	(Beta.beta_reduce
