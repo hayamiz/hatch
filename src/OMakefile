@@ -57,6 +57,7 @@ FILES[] =
     normal
     alpha
     beta
+    constfold
     main
 
 PROGRAM = hatch
