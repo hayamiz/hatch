@@ -24,7 +24,6 @@ rule token = parse
   | "bind"         { BIND }
   | "let"          { LET }
   | "in"           { IN }
-  | "return"       { RETURN }
   | "->"           { RARROW }
   | "if"           { IF }
   | "else"         { ELSE }

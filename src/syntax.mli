@@ -23,7 +23,6 @@ type egg_expr =
   | ExpInfix   of (egg_infix_oper * egg_expr * egg_expr)
   | ExpSeq     of (egg_expr list) (* compound and block expression *)
   | ExpIf      of (egg_expr * egg_expr * egg_expr)
-  | ExpReturn  of (egg_expr)
 
 and egg_prefix_oper =
 	PrefixPlus

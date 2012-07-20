@@ -40,7 +40,6 @@
 %token LAMBDA
 %token IF ELSE
 %token BIND RARROW LET IN
-%token RETURN
 %token EOF
 %left LAND LOR          /* 5th precedence */
 %left EQ LE GE LT GT    /* 4th precedence */
@@ -71,7 +70,6 @@ expr:
   | infix_expr          { $1 }
   | block_expr          { $1 }
   | if_expr             { $1 }
-  | return_expr         { $1 }
 
 primary_expr:
     literal             { $1 }
@@ -151,10 +149,6 @@ if_expr:
     IF cond_expr expr ELSE expr  { ExpIf ($2, $3, $5) }
   | IF cond_expr expr            { ExpIf ($2, $3, ExpNop) }
 ;
-
-return_expr:
-    RETURN expr  { ExpReturn ($2) }
-  | RETURN       { ExpReturn (ExpLiteral (LitUndef)) }
 
 %%
 
