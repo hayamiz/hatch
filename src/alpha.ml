@@ -12,13 +12,9 @@ let rec do_alpha_convert env nexp =
 	match syms with
 		[] -> env
 	  | s :: syms ->
-		  if Smap.mem s env then
-			let new_sym = Symbol.gensym () in
-			let new_env = Smap.add s new_sym env in
-			  addsyms new_env syms
-		  else
-			let new_env = Smap.add s s env in
-			  addsyms new_env syms
+		  let new_sym = Symbol.gensym () in
+		  let new_env = Smap.add s new_sym env in
+			addsyms new_env syms
   in
   match nexp with
 	  NexpVar id ->
