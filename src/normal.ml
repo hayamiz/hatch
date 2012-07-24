@@ -74,6 +74,7 @@ let rec norm env exp =
 	| ExpLiteral (LitFloat x) -> NexpFloat x
 	| ExpLiteral (LitBool x) -> NexpBool x
 	| ExpLiteral (LitString x) -> NexpString x
+	| ExpLiteral LitUndef -> NexpUndef
 	| ExpLambda (params, body) ->
 		NexpLambda (params, norm env body)
 	| ExpApply (f, args) ->
@@ -119,7 +120,11 @@ let rec norm env exp =
 						 norm_exprs rest)
 		in
 		  norm_exprs es
-	| _ -> NexpUndef
+	| ExpIf (cond, if_body, else_body) ->
+		make_let (norm env cond)
+		  (fun cond_sym ->
+			 NexpIf (cond_sym, norm env if_body, norm env else_body))
+	| ExpNop -> NexpUndef
 
 let normalize exp =
   norm Smap.empty exp
@@ -149,7 +154,7 @@ let rec reduce_let nexp =
 		in
 		  reduce_let new_nexp
 	| NexpLet (id, v, body) ->
-		NexpLet (id, v, reduce_let body)
+		NexpLet (id, reduce_let v, reduce_let body)
 	| NexpPrefix _
 	| NexpInfix _ ->
 		nexp
@@ -203,3 +208,39 @@ let rec normal_expr_equal ?(exact=false) expected actual =
 		  (comp_sym c1 c2) && (normal_expr_equal ~exact:exact if1 if2) && (normal_expr_equal ~exact:exact else1 else2)
 	  | _ ->
 		  false
+
+let rec freevars env nexp =
+  let make_fvars env syms =
+	List.fold_left (fun fv sym -> if Sset.mem sym env then fv else Sset.add sym fv)
+	  Sset.empty syms
+  in
+	match nexp with
+		NexpVar sym ->
+		  make_fvars env [sym]
+	  | NexpInt _
+	  | NexpFloat _
+	  | NexpString _
+	  | NexpBool _
+	  | NexpUndef ->
+		  Sset.empty
+	  | NexpLambda (params, body) ->
+		  let env' = Sset.union (Sset.sset_of_list params) env in
+			freevars env' body
+	  | NexpApply (f, args) ->
+		  let syms = f :: args in
+			make_fvars env syms
+	  | NexpBind (id, v) ->
+		  freevars env v
+	  | NexpLet (id, v, body) ->
+		  let v_fvars = freevars env v in
+		  let env' = Sset.add id env in
+		  let body_fvars = freevars env' body in
+			Sset.union v_fvars body_fvars
+	  | NexpPrefix (op, sym) ->
+		  make_fvars env [sym]
+	  | NexpInfix (op, s1, s2) ->
+		  make_fvars env [s1; s2;]
+	  | NexpIf (cond, if_body, else_body) ->
+		  Sset.union (make_fvars env [cond])
+			(Sset.union (freevars env if_body)
+			   (freevars env else_body))

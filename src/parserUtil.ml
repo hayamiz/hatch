@@ -96,11 +96,12 @@ let rec string_of_expr ?(indent = 0) e =
   match e with
 	  ExpLiteral (lit) -> is ^ "Literal " ^ (string_of_literal lit)
 	| ExpLambda (params, body_expr) ->
-		is ^ "Closure (" ^ (String.concat "," params) ^ ") {\n" ^
+		is ^ "Lambda (" ^ (String.concat "," params) ^ ") {\n" ^
 		  (string_of_expr body_expr ~indent:(indent+2)) ^ "\n" ^
 		  is ^ "}"
 	| ExpApply (f, args) ->
-		"Apply " ^ (string_of_expr f) ^ "(" ^ (String.concat "," (List.map string_of_expr args)) ^ ")"
+		is ^ "Apply:\n" ^ (string_of_expr f ~indent:(indent+2)) ^ "\n" ^
+		  (String.concat "\n" (List.map (fun arg -> string_of_expr arg ~indent:(indent+2)) args))
 	| ExpBind ((id, v)) ->
 		is ^ "Bind: " ^ id ^ " ->\n" ^
 		  (string_of_expr v ~indent:(indent+4)) ^ "\n"

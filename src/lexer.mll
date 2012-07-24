@@ -17,7 +17,7 @@ let unquote_str str =
 
 }
 rule token = parse
-    [' ' '\t']     { token lexbuf }     (* skip blanks *)
+    ['\n' ' ' '\t']     { token lexbuf }     (* skip blanks *)
   | '#' [^ '\n']*  { token lexbuf }		(* comment *)
   | "undefined"    { UNDEF }
   | "lambda"       { LAMBDA }

@@ -24,3 +24,4 @@ val normalize: Syntax.egg_expr -> normal_expr
 val reduce_let: normal_expr -> normal_expr
 
 val normal_expr_equal: ?exact:bool -> normal_expr -> normal_expr -> bool
+val freevars: Sset.t -> normal_expr -> Sset.t

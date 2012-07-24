@@ -21,7 +21,7 @@ clean:
 
 OCamlProgram($(PROGRAM), $(FILES))
 
-check : $(PROGRAM)
+check : $(PROGRAM) ../src/hatch
 	./$(PROGRAM)
 
 .DEFAULT: $(PROGRAM) check

@@ -197,7 +197,8 @@ let assert_eq_egg_expr expected exp_str =
 	  (string_of_expr expected)
 	  (string_of_expr tree)
   with Parsing.Parse_error ->
-	print_string ("Parse error: " ^ exp_str ^ "\n")
+	print_string ("Parse error: " ^ exp_str ^ "\n");
+	raise (Failure ("Parse error: " ^ exp_str ^ "\n"))
 
 let test_parser_lit_id _ =
   assert_eq_egg_expr
@@ -276,12 +277,6 @@ let test_parser_apply_expr _ =
 	(ExpApply (ExpLiteral (LitIdent "a"),
 			   [ExpLiteral (LitInt 1); ExpLiteral (LitInt 3); ExpLiteral (LitInt 4)]))
 	("a(1,3,4)");
-
-  assert_eq_egg_expr
-	(ExpApply (ExpLiteral (LitIdent "print"),
-			   [ExpLiteral (LitInt 1);
-				ExpLiteral (LitInt 2)]))
-	("print 1, 2");
 
   ()
 
@@ -402,6 +397,13 @@ let test_parser_infix_expr _ =
 			   (parse_string "foo(2,3)")))
 	("1 + foo(2,3)");
 
+
+  assert_eq_egg_expr
+	(ExpInfix (InfixPlus,
+			   (parse_string "bar(1)"),
+			   (parse_string "foo(2,3)")))
+	("bar(1) + foo(2,3)");
+
   ()
 
 let test_parser_infix_expr_mul_div _ =
@@ -424,6 +426,25 @@ let test_parser_infix_expr_mul_div _ =
   assert_eq_egg_expr
 	(ExpInfix (InfixMinus, (ExpInfix (InfixPlus, ExpLiteral (LitInt 1), ExpLiteral (LitInt 2))), ExpLiteral (LitInt 3)))
 	("1 + 2 - 3");
+  ()
+
+
+let test_parser_infix_expr_apply _ =
+  assert_eq_egg_expr
+	(ExpInfix (InfixMul,
+			   ExpLiteral (LitInt 1),
+			   ExpApply (ExpLiteral (LitIdent "foo"),
+						 [ExpLiteral (LitInt 2)])))
+	("1 + foo(2)");
+
+  assert_eq_egg_expr
+	(ExpInfix (InfixMul,
+			   ExpApply (ExpLiteral (LitIdent "bar"),
+						 [ExpLiteral (LitInt 1)]),
+			   ExpApply (ExpLiteral (LitIdent "foo"),
+						 [ExpLiteral (LitInt 2)])))
+	("bar(1) + foo(2)");
+
   ()
 
 let test_parser_infix_comp_expr _ =
@@ -558,6 +579,15 @@ let test_parser_compound_expr _ =
 
   ()
 
+let test_parser_multiline _ =
+  assert_eq_egg_expr
+	(ExpSeq ([ExpLiteral (LitIdent "a");
+			  ExpLiteral (LitIdent "b");
+			  ExpLiteral (LitInt   1)]))
+	("a;\nb;\n 1");
+
+  ()
+
 let test_parser_block_expr _ =
   assert_eq_egg_expr
 	(ExpSeq ([ExpLiteral (LitIdent "a");
@@ -610,6 +640,63 @@ let test_parser_if_expr _ =
 
   ()
 
+let test_parser_if_nobrace_expr _ =
+  assert_eq_egg_expr
+	(ExpIf (ExpLiteral (LitIdent "a"),
+			ExpLiteral (LitIdent "b"),
+			ExpLiteral (LitIdent "c")))
+	"if a b else c";
+
+  assert_eq_egg_expr
+	(ExpIf (ExpLiteral (LitIdent "a"),
+			ExpLiteral (LitIdent "b"),
+			ExpIf (ExpLiteral (LitIdent "c"),
+				   ExpLiteral (LitIdent "d"),
+				   ExpLiteral (LitIdent "f"))))
+	"if a b else if c d else f";
+
+  assert_eq_egg_expr
+	(ExpIf (parse_string "1+2 == 3",
+			ExpLiteral (LitIdent "b"),
+			ExpLiteral (LitIdent "d")))
+	"if 1+2 == 3 b else d ";
+
+  assert_eq_egg_expr
+	(ExpIf (parse_string "1+2 == 3",
+			ExpLiteral (LitIdent "b"),
+			ExpIf (ExpLiteral (LitIdent "c"),
+				   ExpLiteral (LitIdent "d"),
+				   ExpLiteral (LitIdent "f"))))
+	"if 1+2 == 3 b else if c d else f";
+
+  assert_eq_egg_expr
+	(ExpIf (parse_string "1+2 == 3",
+			ExpLiteral (LitIdent "b"),
+			ExpIf (ExpLiteral (LitIdent "c"),
+				   ExpLiteral (LitIdent "d"),
+				   ExpLiteral (LitIdent "f"))))
+	"if 1+2 == 3 b else if c d else f";
+
+  assert_eq_egg_expr
+	(ExpIf (parse_string "1+2 == 3",
+			parse_string "n + 1",
+			parse_string "m + 2"))
+	"if 1+2 == 3 \n n + 1 else m + 2";
+
+  assert_eq_egg_expr
+	(ExpIf (parse_string "1+2 == 3",
+			parse_string "n + 1",
+			parse_string "1 + foo(2)"))
+	"if 1+2 == 3 \n n + 1 else 1 + foo(2)";
+
+  assert_eq_egg_expr
+	(ExpIf (parse_string "1+2 == 3",
+			parse_string "n + 1",
+			parse_string "bar(2) + foo(2)"))
+	"if 1+2 == 3 \n n + 1 else bar(2) + foo(2)";
+
+  ()
+
 let _ = add_suites begin "Parser" >::: [
   "parser_lit_id" >:: test_parser_lit_id;
   "parser_lit_int" >:: test_parser_lit_int;
@@ -631,8 +718,10 @@ let _ = add_suites begin "Parser" >::: [
   "parser_infix_logi_expr" >:: test_parser_infix_logi_expr;
   "parser_infix_logi_comp_expr" >:: test_parser_infix_logi_comp_expr;
   "parser_compound_expr" >:: test_parser_compound_expr;
+  "parser_multiline" >:: test_parser_multiline;
   "parser_block_expr" >:: test_parser_block_expr;
   "parser_if_expr" >:: test_parser_if_expr;
+  "parser_if_nobrace_expr" >:: test_parser_if_nobrace_expr;
 ] end
 
 
@@ -775,6 +864,16 @@ let test_norm_arith_exp _ =
 
   ()
 
+let test_norm_lambda_if _ =
+  assert_eq_normal_expr
+	(NexpLambda (["x"],
+				 NexpIf ("a",
+						 NexpInt 1,
+						 NexpVar "b")))
+	"lambda(x){ if a 1 else b }";
+
+  ()
+
 let test_letreduced_norm_arith_exp _ =
   assert_eq_letreduced_normal_expr
 	(NexpLet ("t2",
@@ -794,11 +893,27 @@ let test_letreduced_norm_arith_exp _ =
 
   ()
 
+let test_letreduced_norm_seq _ =
+  assert_eq_letreduced_normal_expr
+	(NexpLet ("sym#5",
+			  (NexpLambda (["n"],
+						   NexpLet ("sym#0",
+									NexpInt 0,
+									NexpLet ("sym#1",
+											 NexpInfix (InfixEq, "n", "sym#0"),
+											 NexpLet ("sym#2",
+													  NexpInt 1,
+													  NexpInfix (InfixLor, "sym#1", "sym#2")))))),
+			  NexpBool true))
+	"lambda (n) { n = 0 || 1 }; true";
+  ()
 
 let _ = add_suites begin "Normal" >::: [
   "norm_simple_exp" >:: test_norm_simple_exp;
   "norm_arith_exp" >:: test_norm_arith_exp;
+  "norm_lambda_if" >:: test_norm_lambda_if;
   "letreduced_norm_arith_exp" >:: test_letreduced_norm_arith_exp;
+  "letreduced_norm_seq" >:: test_letreduced_norm_seq;
 ] end
 
 
@@ -1248,6 +1363,235 @@ let test_const_fold_simple _ =
 let _ = add_suites begin "Constfold" >::: [
   "const_fold_simple" >:: test_const_fold_simple;
 ] end
+
+
+(* test of lambda.ml *)
+
+open Lambda
+
+let rec ll_expr_equal ?(exact=false) expected actual =
+  let comp_sym x y =
+	if exact then
+	  if (String.length x >= 4 && (String.sub x 0 4) = "sym#") &&
+		(String.length y >= 4 && (String.sub y 0 4) = "sym#") then
+		  true
+	  else
+		x = y
+	else
+	   true
+  in
+  let rec comp_syms ss1 ss2 =
+	match (ss1, ss2) with
+		([], []) -> true
+	  | (_ :: _, [])
+	  | ([], _ :: _) -> false
+	  | (s1 :: ss1, s2 :: ss2) ->
+		  if comp_sym s1 s2 then
+			comp_syms ss1 ss2
+		  else false
+  in
+	match (expected, actual) with
+		(LLVar x, LLVar y) -> comp_sym x y
+	  | (LLInt x, LLInt y) when x = y -> true
+	  | (LLFloat x, LLFloat y) when x = y -> true
+	  | (LLString x, LLString y) when x = y -> true
+	  | (LLBool x, LLBool y) when x = y -> true
+	  | (LLUndef , LLUndef ) -> true
+	  | (LLMakeCls (f1, fvar_vals1), LLMakeCls (f2, fvar_vals2)) ->
+		  (comp_sym f1 f2) &&
+			(comp_syms fvar_vals1 fvar_vals2)
+	  | (LLFunApply (f1, args1), LLFunApply (f2, args2)) ->
+		  (comp_sym f1 f2) &&
+			(comp_syms args1 args2)
+	  | (LLClsApply (f1, fv_vals1, args1), LLClsApply (f2, fv_vals2, args2)) ->
+		  (comp_sym f1 f2) &&
+			(comp_syms fv_vals1 fv_vals2) &&
+			(comp_syms args1 args2)
+	  | (LLBind (id1, v1), LLBind (id2, v2)) ->
+		  (comp_sym id1 id2) && (ll_expr_equal ~exact:exact v1 v2)
+	  | (LLLet (id1, v1, body1), LLLet (id2, v2, body2)) ->
+		  (comp_sym id1 id2) && 
+			(ll_expr_equal ~exact:exact v1 v2) &&
+			(ll_expr_equal ~exact:exact body1 body2)
+	  | (LLPrefix (op1, v1), LLPrefix (op2, v2)) ->
+		  (op1 = op2) && (comp_sym v1 v2)
+	  | (LLInfix (op1, lv1, rv1), LLInfix (op2, lv2, rv2)) ->
+		  (op1 = op2) && (comp_sym lv1 lv2) && (comp_sym rv1 rv2)
+	  | (LLIf (c1, if1, else1), LLIf (c2, if2, else2)) -> 
+		  (comp_sym c1 c2) && (ll_expr_equal ~exact:exact if1 if2) && (ll_expr_equal ~exact:exact else1 else2)
+	  | _ ->
+		  false
+
+let equal_ll_program llp1 llp2 =
+  let rec equal_ll_funcs funcs1 funcs2 =
+	match (funcs1, funcs2) with
+		([], []) -> true
+	  | ((LLFlatFun (f1, params1, body1)) :: funcs1,
+		 (LLFlatFun (f2, params2, body2)) :: funcs2) ->
+		  ((List.length params1) == (List.length params2)) &&
+			(ll_expr_equal body1 body2) &&
+			(equal_ll_funcs funcs1 funcs2)
+	  | ((LLClsFun (f1, fvars1, params1, body1)) :: funcs1,
+		 (LLClsFun (f2, fvars2, params2, body2)) :: funcs2) ->
+		  ((List.length params1) == (List.length params2)) &&
+			((List.length fvars1) == (List.length fvars2)) &&
+			(ll_expr_equal body1 body2) &&
+			(equal_ll_funcs funcs1 funcs2)
+	  | _ ->
+		  false
+  in
+	(equal_ll_funcs llp1.funcs llp2.funcs) &&
+	  (ll_expr_equal llp1.main llp2.main)
+
+
+let assert_equal_lambda_shift expected actual =
+  assert_equal ~msg:("Lambda-Lifting: " ^ (string_of_normal_expr actual))
+	~cmp:(fun x y -> equal_ll_program x y)
+	~printer:(fun lle -> "\n" ^ (string_of_ll_program lle) ^ "\n")
+	expected (lambda_lift actual)
+
+
+let test_lambda_simple _ =
+  assert_equal_lambda_shift
+	({ funcs = []; main = LLVar "x" })
+	 (NexpVar "x");
+
+  assert_equal_lambda_shift
+	({ funcs = [];
+	   main = (LLInt 1) })
+	(NexpInt 1);
+  
+  assert_equal_lambda_shift
+	({ funcs = [];
+	   main = (LLFloat 1.23) })
+	(NexpFloat 1.23);
+  
+  assert_equal_lambda_shift
+	({ funcs = [];
+	   main = (LLString "piyo") })
+	 (NexpString "piyo");
+
+  assert_equal_lambda_shift
+	({ funcs = [];
+	   main = (LLBool false) })
+	(NexpBool false);
+  assert_equal_lambda_shift
+	({ funcs = [];
+	   main = (LLBool true) })
+	(NexpBool true);
+
+  assert_equal_lambda_shift
+	({ funcs = [];
+	   main = (LLUndef) })
+	(NexpUndef);
+
+  assert_equal_lambda_shift
+	({ funcs = [];
+	   main = (LLFunApply ("samefunc", ["arg1"; "arg2"])) })
+	(NexpApply ("samefunc", ["arg1"; "arg2"]));
+
+  assert_equal_lambda_shift
+	({ funcs = [];
+	   main = (LLBind ("hoge", LLInt 5)) })
+	(NexpBind ("hoge", NexpInt 5));
+
+  assert_equal_lambda_shift
+	({ funcs = [];
+	   main = (LLLet ("sym#x", LLInt 1, LLVar "sym#x")) })
+	(NexpLet ("sym#x", NexpInt 1, NexpVar "sym#x"));
+
+  assert_equal_lambda_shift
+	({ funcs = [];
+	   main = (LLPrefix (PrefixMinus, "hoge")) })
+	(NexpPrefix (PrefixMinus, "hoge"));
+
+  assert_equal_lambda_shift
+	({ funcs = [];
+	   main = (LLInfix (InfixMul, "hoge", "fuga")) })
+	(NexpInfix (InfixMul, "hoge", "fuga"));
+
+  assert_equal_lambda_shift
+	({ funcs = [];
+	   main = (LLInfix (InfixMul, "hoge", "fuga")) })
+	(NexpInfix (InfixMul, "hoge", "fuga"));
+
+  assert_equal_lambda_shift
+	({ funcs = [];
+	   main = (LLLet ("x",
+						LLInt 1,
+						LLIf ("x", LLVar "x", LLVar "x"))) })
+	(NexpLet ("x",
+			  NexpInt 1,
+			  NexpIf ("x", NexpVar "x", NexpVar "x")));
+
+  ()
+
+let test_lambda_flatfun _ =
+  assert_equal_lambda_shift
+	({ funcs = [LLFlatFun ("sym#fun1", ["hoge"],
+						   LLVar "hoge")];
+	   main =  (LLLet ("x",
+					   LLVar "sym#fun1",
+					   LLUndef))})
+	(NexpLet ("x",
+			  NexpLambda (["hoge"],
+						  NexpVar "hoge"),
+			  NexpUndef));
+
+  assert_equal_lambda_shift
+	({ funcs = [LLFlatFun ("sym#fun1", ["hoge"],
+						   LLVar "hoge")];
+	   main =  (LLLet ("x",
+					   LLVar "sym#fun1",
+					   LLUndef))})
+	(NexpLet ("x",
+			  NexpLambda (["hoge"],
+						  NexpVar "hoge"),
+			  NexpUndef));
+  
+  ()
+
+let test_lambda_closure _ =
+  assert_equal_lambda_shift
+	({ funcs = [LLClsFun ("sym#fun1",
+						  ["x"],
+						  ["hoge"],
+						  LLVar "x")];
+	   main =  (LLLet ("x",
+					   LLInt 1,
+					   LLMakeCls ("sym#fun1", ["x"])))})
+	(NexpLet ("x",
+			  NexpInt 1,
+			  NexpLambda (["hoge"],
+						  NexpVar "x")));
+
+  assert_equal_lambda_shift
+	({ funcs = [LLClsFun ("sym#fun2",
+						  ["x"],
+						  ["a"],
+						  LLMakeCls ("sym#fun1", ["x"; "a"]));
+			   LLClsFun ("sym#fun1",
+						  ["x"; "a"],
+						  ["b"],
+						 LLInfix (InfixPlus, "x", "a"))];
+	   main =  (LLLet ("x",
+					   LLInt 1,
+					   LLMakeCls ("sym#fun2", ["x"])))})
+	(NexpLet ("x",
+			  NexpInt 1,
+			  NexpLambda (["a"],
+						  NexpLambda (["b"],
+									  NexpInfix (InfixPlus, "x", "a")))));
+
+  ()
+
+
+let _ = add_suites begin "Lambda" >::: [
+  "lambda_simple" >:: test_lambda_simple;
+  "lambda_flatfun" >:: test_lambda_flatfun;
+  "lambda_closure" >:: test_lambda_closure;
+] end
+
 
 
 

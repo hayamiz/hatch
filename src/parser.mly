@@ -72,7 +72,6 @@ literal:
 expr:
     closure_expr        { $1 }
   | apply_expr          { $1 }
-  | noparen_apply_expr  { $1 }
   | bind_expr           { $1 }
   | let_expr            { $1 }
   | infix_expr          { $1 }
@@ -94,13 +93,6 @@ argument_list:
 
 apply_expr:
     primary_expr LPAREN argument_list RPAREN               { ExpApply ($1, $3) }
-
-noparen_argument_list:
-    primary_expr COMMA noparen_argument_list { $1 :: $3 }
-  | primary_expr                             { [$1] }
-
-noparen_apply_expr:
-    primary_expr noparen_argument_list                     { ExpApply ($1, $2) }
 
 binding:
     IDENT RARROW expr                    { ($1, $3) }
