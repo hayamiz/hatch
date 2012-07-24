@@ -50,6 +50,7 @@ OCamlGeneratedFiles(lexer.ml parser.ml)
 FILES[] =
     symbol
     smap
+    sset
     syntax
     lexer
     parser
@@ -58,6 +59,7 @@ FILES[] =
     alpha
     beta
     constfold
+    lambda
     main
 
 PROGRAM = hatch
