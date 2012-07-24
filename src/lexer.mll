@@ -29,7 +29,7 @@ rule token = parse
   | "else"         { ELSE }
   | "true"         { TRUE }
   | "false"        { FALSE }
-  | ['A'-'Z' 'a'-'z'] ['A'-'Z' 'a'-'z' '0'-'9']*
+  | ['A'-'Z' 'a'-'z'] ['A'-'Z' 'a'-'z' '0'-'9' '_']*
                    { IDENT (Lexing.lexeme lexbuf) }
   | ['0'-'9']+ '.' ['0'-'9']* (['e' 'E'] ['+' '-']? ['0'-'9']+)?
                    { FLOAT(float_of_string(Lexing.lexeme lexbuf)) }

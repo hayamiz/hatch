@@ -1,0 +1,13 @@
+
+bind fib_iter -> lambda (i, n, n1, n2) {
+  if i = n
+    n1
+  else
+    fib_iter (i + 1, n, n2, n1 + n2)
+};
+
+bind fib -> lambda (n) {
+  fib_iter (0, n, 0, 1)
+};
+
+ print(fib(10))

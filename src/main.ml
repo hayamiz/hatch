@@ -57,5 +57,18 @@ let step5 _ =
 					 (Parser.main Lexer.token lexbuf))))));
 	exit 0
 
+let step6 _ =
+  let lexbuf = Lexing.from_channel stdin in
+	print_string
+	  (Lambda.string_of_ll_program
+		 (Lambda.lambda_lift
+			(Constfold.const_fold
+			   (Beta.beta_reduce
+				  (Normal.reduce_let
+					 (Alpha.alpha_convert
+						(Normal.normalize
+						   (Parser.main Lexer.token lexbuf))))))));
+	exit 0
+
 let _ =
-  step5 ()
+  step6 ()

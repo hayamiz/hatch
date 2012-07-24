@@ -165,6 +165,7 @@ let test_lex_id _ =
   assert_eq_tokens [IDENT ("foo123")] (tokens_from_string "foo123");
   assert_eq_tokens [INT (1); PLUS; IDENT ("foo")] (tokens_from_string "1+foo");
   assert_eq_tokens [IDENT ("foo"); INT (1)] (tokens_from_string "foo 1");
+  assert_eq_tokens [IDENT ("fo_o"); INT (1)] (tokens_from_string "fo_o 1");
   ()
 
 
