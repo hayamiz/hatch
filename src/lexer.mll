@@ -24,7 +24,6 @@ rule token = parse
   | "bind"         { BIND }
   | "let"          { LET }
   | "in"           { IN }
-  | "->"           { RARROW }
   | "if"           { IF }
   | "else"         { ELSE }
   | "true"         { TRUE }
@@ -33,8 +32,10 @@ rule token = parse
                    { IDENT (Lexing.lexeme lexbuf) }
   | ['0'-'9']+ '.' ['0'-'9']* (['e' 'E'] ['+' '-']? ['0'-'9']+)?
                    { FLOAT(float_of_string(Lexing.lexeme lexbuf)) }
+  | "0x" ['0'-'9']+     { INT(int_of_string(Lexing.lexeme lexbuf)) }
   | ['0'-'9']+     { INT(int_of_string(Lexing.lexeme lexbuf)) }
   | '"' ("\\\""|[^ '"'])* '"'        { STRING(unquote_str (Lexing.lexeme lexbuf)) }
+  | "->"           { RARROW }
   | '('            { LPAREN }
   | ')'            { RPAREN }
   | '{'            { LBRACE }

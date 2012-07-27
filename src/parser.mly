@@ -70,7 +70,7 @@ literal:
   | UNDEF  { ExpLiteral (LitUndef) }
 
 expr:
-    closure_expr        { $1 }
+    lambda_expr        { $1 }
   | apply_expr          { $1 }
   | bind_expr           { $1 }
   | let_expr            { $1 }
@@ -83,7 +83,12 @@ primary_expr:
   | apply_expr          { $1 }
   | LPAREN expr RPAREN  { $2 }
 
-closure_expr:
+param_list:
+    IDENT COMMA param_list   { $1 :: $3 }
+  | IDENT                    { [$1] }
+  |                          { [] }
+
+lambda_expr:
     LAMBDA LPAREN param_list RPAREN expr  { ExpLambda ($3, $5)}
 
 argument_list:
@@ -128,11 +133,6 @@ infix_expr:
   | infix_expr GT    infix_expr  { ExpInfix (InfixGt,    $1, $3) }
   | infix_expr LAND  infix_expr  { ExpInfix (InfixLand,  $1, $3) }
   | infix_expr LOR   infix_expr  { ExpInfix (InfixLor,   $1, $3) }
-
-param_list:
-    IDENT COMMA param_list   { $1 :: $3 }
-  | IDENT                    { [$1] }
-  |                          { [] }
 
 block_expr:
     LBRACE compound_expr RBRACE   { $2 }

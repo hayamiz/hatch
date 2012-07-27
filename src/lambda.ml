@@ -48,10 +48,9 @@ let rec string_of_ll_expr ?(indent = 0) e =
 		is ^ "ClsApply: (" ^ f ^ " " ^ (String.concat "," fvar_vals) ^ ")(" ^ (String.concat "," args) ^ ")"
 	| LLBind (id, v) ->
 		is ^ "Bind: " ^ id ^ " ->\n" ^
-		  (string_of_ll_expr v ~indent:(indent+4)) ^ "\n"
+		  (string_of_ll_expr v ~indent:(indent+6))
 	| LLLet (id, v, body) ->
-		is ^ "Let" ^ "\n" ^
-		  is ^ "  " ^ id ^ " ->\n" ^
+		is ^ "Let " ^ id ^ " ->\n" ^
 		  (string_of_ll_expr v ~indent:(indent+4)) ^ "\n" ^
 		  (string_of_ll_expr body ~indent:(indent+2))
 	| LLPrefix (op, e) ->
@@ -70,7 +69,7 @@ let string_of_ll_fundef f =
 		"  FlatFun " ^ fname ^ " (" ^ (String.concat ", " params) ^ "):\n" ^
 		  (string_of_ll_expr ~indent:4 body)
 	| LLClsFun (fname, params, fvars, body) ->
-		"  ClsFun (" ^ fname ^ " " ^ (String.concat ", " fvars) ^ ") (" ^
+		"  ClsFun " ^ fname ^ " fvars:(" ^ (String.concat ", " fvars) ^ ") (" ^
 		  (String.concat ", " params) ^ "):\n" ^
 		  string_of_ll_expr ~indent:4 body
 
