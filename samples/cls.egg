@@ -1,0 +1,14 @@
+
+bind make_add_x -> lambda (x) {
+  lambda (y) {
+    x + y
+  }
+};
+
+let add1 -> make_add_x(1)
+in
+  print (add1(2)) # => 3
+;
+
+let x -> 1 in
+  (lambda (y) x + y)(2)
