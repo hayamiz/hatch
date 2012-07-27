@@ -6,7 +6,16 @@ USE_OCAMLFIND = true
 OCAMLINCLUDES += ../src
 
 FILES[] =
-	test
+	testutil
+	testmain
+	test_parserutil
+	test_lexer
+	test_parser
+	test_normal
+	test_alpha
+	test_beta
+	test_constfold
+	test_lambda
 
 OCAMLPACKS[] =
 	oUnit
