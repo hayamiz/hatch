@@ -36,9 +36,8 @@ let rec ll_expr_equal ?(exact=false) expected actual =
 	  | (LLFunApply (f1, args1), LLFunApply (f2, args2)) ->
 		  (comp_sym f1 f2) &&
 			(comp_syms args1 args2)
-	  | (LLClsApply (f1, fv_vals1, args1), LLClsApply (f2, fv_vals2, args2)) ->
+	  | (LLClsApply (f1, args1), LLClsApply (f2, args2)) ->
 		  (comp_sym f1 f2) &&
-			(comp_syms fv_vals1 fv_vals2) &&
 			(comp_syms args1 args2)
 	  | (LLBind (id1, v1), LLBind (id2, v2)) ->
 		  (comp_sym id1 id2) && (ll_expr_equal ~exact:exact v1 v2)
@@ -61,13 +60,13 @@ let equal_ll_program llp1 llp2 =
 		([], []) -> true
 	  | ((LLFlatFun (f1, params1, body1)) :: funcs1,
 		 (LLFlatFun (f2, params2, body2)) :: funcs2) ->
-		  ((List.length params1) == (List.length params2)) &&
+		  (comp_syms params1 params2) &&
 			(ll_expr_equal body1 body2) &&
 			(equal_ll_funcs funcs1 funcs2)
 	  | ((LLClsFun (f1, fvars1, params1, body1)) :: funcs1,
 		 (LLClsFun (f2, fvars2, params2, body2)) :: funcs2) ->
-		  ((List.length params1) == (List.length params2)) &&
-			((List.length fvars1) == (List.length fvars2)) &&
+		  (comp_syms fvars1 fvars2) &&
+			(comp_syms params1 params2) &&
 			(ll_expr_equal body1 body2) &&
 			(equal_ll_funcs funcs1 funcs2)
 	  | _ ->
@@ -187,9 +186,9 @@ let test_lambda_flatfun _ =
 let test_lambda_closure _ =
   assert_equal_lambda_shift
 	({ funcs = [LLClsFun ("sym#fun1",
-						  ["x"],
+						  ["sym#x"],
 						  ["hoge"],
-						  LLVar "x")];
+						  LLVar "sym#x")];
 	   main =  (LLLet ("x",
 					   LLInt 1,
 					   LLMakeCls ("sym#fun1", ["x"])))})
@@ -200,13 +199,13 @@ let test_lambda_closure _ =
 
   assert_equal_lambda_shift
 	({ funcs = [LLClsFun ("sym#fun2",
-						  ["x"],
+						  ["sym#fv_x"],
 						  ["a"],
-						  LLMakeCls ("sym#fun1", ["x"; "a"]));
-			   LLClsFun ("sym#fun1",
-						  ["x"; "a"],
+						  LLMakeCls ("sym#fun1", ["sym#fv_x"; "a"]));
+				LLClsFun ("sym#fun1",
+						  ["sym#fv_x"; "sym#fv_a"],
 						  ["b"],
-						 LLInfix (InfixPlus, "x", "a"))];
+						  LLInfix (InfixPlus, "sym#fv_x", "sym#fv_a"))];
 	   main =  (LLLet ("x",
 					   LLInt 1,
 					   LLMakeCls ("sym#fun2", ["x"])))})

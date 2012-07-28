@@ -16,6 +16,8 @@ FILES[] =
 	test_beta
 	test_constfold
 	test_lambda
+	test_highlevel
+	test_hvalue
 
 OCAMLPACKS[] =
 	oUnit

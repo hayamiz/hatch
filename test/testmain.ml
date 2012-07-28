@@ -10,6 +10,8 @@ let _ =
   Test_beta.add_suites ();
   Test_constfold.add_suites ();
   Test_lambda.add_suites ();
+  Test_highlevel.add_suites ();
+  Test_hvalue.add_suites ();
 ;;
 
 

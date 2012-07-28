@@ -5,6 +5,7 @@ include Parser
 include ParserUtil
 include Normal
 include Lambda
+include Symbol
 
 let suites: OUnit.test list ref = ref []
 

@@ -14,7 +14,7 @@ type ll_expr =
   | LLUndef
   | LLMakeCls of sym (* func *) * sym list (* fvar values *)
   | LLFunApply of sym (* func *) * sym list (* arguments *)
-  | LLClsApply of sym (* func *) * sym list (* fvar values *) * sym list (* arguments *)
+  | LLClsApply of sym (* cls *)  * sym list (* arguments *)
   | LLBind of sym (* variable *) * ll_expr (* value *)
   | LLLet of sym (* variable *) * ll_expr (* value *) * ll_expr (* body *)
   | LLPrefix of egg_prefix_oper * sym
@@ -44,8 +44,8 @@ let rec string_of_ll_expr ?(indent = 0) e =
 		is ^ "MakeCls: " ^ f ^ "(" ^ (String.concat ", " fvar_vals) ^ ")"
 	| LLFunApply (f, args) ->
 		is ^ "FunApply: " ^ f ^ "(" ^ (String.concat "," args) ^ ")"
-	| LLClsApply (f, fvar_vals, args) ->
-		is ^ "ClsApply: (" ^ f ^ " " ^ (String.concat "," fvar_vals) ^ ")(" ^ (String.concat "," args) ^ ")"
+	| LLClsApply (f, args) ->
+		is ^ "ClsApply: " ^ f ^ "(" ^ (String.concat "," args) ^ ")"
 	| LLBind (id, v) ->
 		is ^ "Bind: " ^ id ^ " ->\n" ^
 		  (string_of_ll_expr v ~indent:(indent+6))
@@ -80,6 +80,31 @@ let string_of_ll_program llp =
 	" Main expr:\n" ^
 	(string_of_ll_expr ~indent:2 llp.main)
 
+let rec replace_symbols mapping lle =
+  let findsym sym =
+	if Smap.mem sym mapping then
+	  Smap.find sym mapping
+	else
+	  sym
+  in
+	match lle with
+		LLVar sym -> LLVar (findsym sym)
+	  | LLMakeCls (fsym, argsyms) ->
+		  LLMakeCls (findsym fsym, List.map findsym argsyms)
+	  | LLFunApply (fsym, argsyms) ->
+		  LLFunApply (findsym fsym, List.map findsym argsyms)
+	  | LLBind (s, e) ->
+		  LLBind (s, replace_symbols mapping e)
+	  | LLLet (sym, v, body) ->
+		  LLLet (sym, replace_symbols mapping v, replace_symbols mapping body)
+	  | LLPrefix (op, sym) ->
+		  LLPrefix (op, findsym sym)
+	  | LLInfix (op, s1, s2) ->
+		  LLInfix (op, findsym s1, findsym s2)
+	  | LLIf (sym, e1, e2) ->
+		  LLIf (findsym sym, replace_symbols mapping e1, replace_symbols mapping e2)
+	  | _ -> lle
+
 let rec do_lambda_lift env funcs nexp =
   let simple_ll_program e =
 	{ funcs = funcs;
@@ -108,7 +133,15 @@ let rec do_lambda_lift env funcs nexp =
 				  let new_fundef = LLFlatFun (new_funname, params, body') in
 					make_ll_program (new_fundef :: funcs') (LLVar new_funname)
 			  | fvars' ->
-				  let new_fundef = LLClsFun (new_funname, fvars', params, body') in
+				  let (newfvars, fvar_mapping) =
+					List.fold_left (fun (newfvs, fvmap) fv ->
+									  let newfv = gensym () in
+										(newfv :: newfvs, Smap.add fv newfv fvmap))
+					  ([], Smap.empty) fvars'
+				  in
+				  let newfvars = List.rev newfvars in
+				  let body'' = replace_symbols fvar_mapping body' in
+				  let new_fundef = LLClsFun (new_funname, newfvars, params, body'') in
 					make_ll_program (new_fundef :: funcs') (LLMakeCls (new_funname, fvars'))
 		  end
 	| NexpApply (f, args) ->

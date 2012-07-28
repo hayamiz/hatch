@@ -28,8 +28,8 @@ if $(not $(OCAMLFIND_EXISTS))
 # Various options
 #
 # OCAMLFLAGS    +=
-# OCAMLCFLAGS   +=
-# OCAMLOPTFLAGS +=
+OCAMLCFLAGS   += -warn-error -8 -g
+OCAMLOPTFLAGS += -warn-error -8 -g
 # OCAML_LINK_FLAGS +=
 # OCAML_BYTE_LINK_FLAGS +=
 # OCAML_NATIVE_LINK_FLAGS +=
@@ -60,6 +60,9 @@ FILES[] =
     beta
     constfold
     lambda
+    hvalue
+    hnative
+    highlevel
     main
 
 PROGRAM = hatch
