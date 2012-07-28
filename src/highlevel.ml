@@ -11,7 +11,7 @@ type label = string
 
 (* stk(n) ... n-th value from the top of the stack *)
 (* opr(n) ... n-th operand of vminst *)
-type vminst =
+type hlvminst =
 	HL_NOP                (* no operation *)
   | HL_PUSH of h_value    (* opr(0) -> stack; *)
   | HL_POP                (* _ <- stack; *)
@@ -41,7 +41,7 @@ type vminst =
   | HL_LABEL of label
   | HL_HALT
 
-let rec vminst_equal ?(exact=false) expected actual =
+let rec hlvminst_equal ?(exact=false) expected actual =
   match (expected, actual) with
 	| (HL_GOTO x, HL_GOTO y)
 	| (HL_BIF x, HL_BIF y)
@@ -58,7 +58,7 @@ let rec vminst_equal ?(exact=false) expected actual =
 		end
 	| (x, y) -> x = y
 
-let rec string_of_vminst inst =
+let rec string_of_hlvminst inst =
   "> " ^
 	match inst with
 		HL_NOP -> "NOP"
@@ -90,20 +90,22 @@ let rec string_of_vminst inst =
 	  | HL_RET -> "RET"
 	  | HL_HALT -> "HALT"
 
-and string_of_vminsts insts =
-  (String.concat "\n" (List.map (fun inst -> string_of_vminst inst) insts))
+and string_of_hlvminsts insts =
+  (String.concat "\n" (List.map (fun inst -> string_of_hlvminst inst) insts))
 
-and vminsts_equal ?(exact=false) expected actual =
+and hlvminsts_equal ?(exact=false) expected actual =
   match (expected, actual) with
 	| ([], []) -> true
-	| (e :: erest, a :: arest) when (vminst_equal e a) ->
-		vminsts_equal erest arest
+	| (e :: erest, a :: arest) when (hlvminst_equal e a) ->
+		hlvminsts_equal erest arest
 	| (e :: _, a :: _) ->
 		begin
-		  print_string ("vminsts_equal unmatched: e = " ^
-					   (string_of_vminst e) ^ ", a = " ^ (string_of_vminst a));
+		  print_string ("hlvminsts_equal unmatched: e = " ^
+					   (string_of_hlvminst e) ^ ", a = " ^ (string_of_hlvminst a));
 		  false
 		end
+	| _ -> false
+
 
 let list_index e l =
   let rec list_index_iter n l =
@@ -134,7 +136,7 @@ let rec get_local_vars lle =
 	| _ -> []
 
 (* args: function args (+ closure args) *)
-let rec compile_ll_expr funenv (localenv: sym list) (lle: ll_expr): vminst list =
+let rec compile_ll_expr funenv (localenv: sym list) (lle: ll_expr): hlvminst list =
   let push_value_by_sym sym =
 	if Smap.mem sym funenv then
 	  HL_PUSH (Smap.find sym funenv)
@@ -236,7 +238,7 @@ let compile_ll_fundef funenv (fundef: ll_fundef) =
 		  (funenv', body_insts @ [HL_RET])
 
 
-let compile (llprog: ll_program): vminst list =
+let compile (llprog: ll_program): hlvminst list =
   let rec compile_fundefs funenv insts fundefs =
 	match fundefs with
 		[] -> (funenv, insts)

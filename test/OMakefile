@@ -18,6 +18,7 @@ FILES[] =
 	test_lambda
 	test_highlevel
 	test_hvalue
+	test_vm
 
 OCAMLPACKS[] =
 	oUnit

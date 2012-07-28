@@ -3,13 +3,13 @@
 open Testutil
 open Highlevel
 
-let assert_eq_vminsts expected llprog =
+let assert_eq_hlvminsts expected llprog =
   let msg = "Compiling: " ^ (string_of_ll_program llprog) ^ "\n"
   in
 	try
 	  assert_equal ~msg:msg
-		~cmp:vminsts_equal
-		~printer:(fun insts -> "\n" ^ (string_of_vminsts insts) ^ "\n")
+		~cmp:hlvminsts_equal
+		~printer:(fun insts -> "\n" ^ (string_of_hlvminsts insts) ^ "\n")
 		expected (compile llprog)
 	with
 		_ as ex ->
@@ -20,14 +20,14 @@ let assert_eq_vminsts expected llprog =
 ;;
 
 let test_highlevel_compile_simple _ =
-  assert_eq_vminsts
+  assert_eq_hlvminsts
 	[HL_GOTO "*MAIN*";
 	 HL_LABEL "*MAIN*";
 	 HL_GREF_PUSH "x";
 	 HL_HALT;]
 	({ funcs = []; main = LLVar "x" });
 
-  assert_eq_vminsts
+  assert_eq_hlvminsts
 	[HL_GOTO "*MAIN*";
 	 HL_LABEL "*MAIN*";
 	 HL_PUSH (HV_int 1);
@@ -35,7 +35,7 @@ let test_highlevel_compile_simple _ =
 	({ funcs = [];
 	   main = (LLInt 1) });
 
-  assert_eq_vminsts
+  assert_eq_hlvminsts
 	[HL_GOTO "*MAIN*";
 	 HL_LABEL "*MAIN*";
 	 HL_PUSH (HV_string "piyo");
@@ -43,7 +43,7 @@ let test_highlevel_compile_simple _ =
 	({ funcs = [];
 	   main = (LLString "piyo") });
 
-  assert_eq_vminsts
+  assert_eq_hlvminsts
 	[HL_GOTO "*MAIN*";
 	 HL_LABEL "*MAIN*";
 	 HL_PUSH_FRAME;
@@ -55,7 +55,7 @@ let test_highlevel_compile_simple _ =
 	({ funcs = [];
 	   main = (LLFunApply ("somefunc", ["arg1"; "arg2"])) });
 
-  assert_eq_vminsts
+  assert_eq_hlvminsts
 	[HL_GOTO "*MAIN*";
 	 HL_LABEL "*MAIN*";
 	 HL_PUSH HV_undef;
@@ -75,7 +75,7 @@ let test_highlevel_compile_simple _ =
   ()
 
 let test_highlevel_ifexpr _ =
-  assert_eq_vminsts
+  assert_eq_hlvminsts
 	[HL_GOTO "*MAIN*";
 	 HL_LABEL "*MAIN*";
 	 HL_PUSH HV_undef;
@@ -95,7 +95,7 @@ let test_highlevel_ifexpr _ =
   ()
 
 let test_highlevel_compile_flatfun _ =
-  assert_eq_vminsts
+  assert_eq_hlvminsts
 	[HL_GOTO "*MAIN*";
 	 HL_LABEL "sym#fun1";
 	 HL_LREF_PUSH 0;
@@ -114,7 +114,7 @@ let test_highlevel_compile_flatfun _ =
   ()
 
 let test_highlevel_compile_clsfun _ =
-  assert_eq_vminsts
+  assert_eq_hlvminsts
 	[HL_GOTO "*MAIN*";
 	 HL_LABEL "sym#fun1";
 	 HL_LREF_PUSH 0;
@@ -137,7 +137,7 @@ let test_highlevel_compile_clsfun _ =
 					   LLInt 1,
 					   LLMakeCls ("sym#fun1", ["x"])))});
 
-  assert_eq_vminsts
+  assert_eq_hlvminsts
 	[HL_GOTO "*MAIN*";
 	 HL_LABEL "sym#fun1";
 	 HL_LREF_PUSH 0;

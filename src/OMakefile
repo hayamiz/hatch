@@ -28,8 +28,8 @@ if $(not $(OCAMLFIND_EXISTS))
 # Various options
 #
 # OCAMLFLAGS    +=
-OCAMLCFLAGS   += -warn-error -8 -g
-OCAMLOPTFLAGS += -warn-error -8 -g
+OCAMLCFLAGS   += -g # -warn-error -8
+OCAMLOPTFLAGS += -g # -warn-error -8
 # OCAML_LINK_FLAGS +=
 # OCAML_BYTE_LINK_FLAGS +=
 # OCAML_NATIVE_LINK_FLAGS +=
@@ -63,6 +63,7 @@ FILES[] =
     hvalue
     hnative
     highlevel
+    vm
     main
 
 PROGRAM = hatch

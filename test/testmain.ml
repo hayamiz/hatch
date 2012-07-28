@@ -12,6 +12,7 @@ let _ =
   Test_lambda.add_suites ();
   Test_highlevel.add_suites ();
   Test_hvalue.add_suites ();
+  Test_vm.add_suites ();
 ;;
 
 
