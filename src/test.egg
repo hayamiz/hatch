@@ -1,0 +1,5 @@
+bind A -> lambda (f) {
+  lambda (g) {
+    f(lambda (arg){g(arg)})
+  }
+};

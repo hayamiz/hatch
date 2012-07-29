@@ -1,0 +1,19 @@
+
+bind Y -> lambda (f) {
+  (lambda (g) { f( lambda (arg) { (g(g))(arg) } ) })(lambda (g) { f( lambda (arg) { (g(g))(arg) } ) })
+};
+
+let fib0 -> lambda (f) {
+  lambda (n) {
+    if (n <= 0)
+      0
+    else if (n = 1)
+      1
+    else
+      f(n - 1) + f(n - 2)
+  }
+}
+in
+let fib -> Y(fib0)
+in
+puts(fib(1))

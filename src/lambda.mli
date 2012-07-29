@@ -15,7 +15,6 @@ type ll_expr =
   | LLUndef
   | LLMakeCls of sym (* func *) * sym list (* fvar values *)
   | LLFunApply of sym (* func *) * sym list (* arguments *)
-  | LLClsApply of sym (* cls *)  * sym list (* arguments *)
   | LLBind of sym (* variable *) * ll_expr (* value *)
   | LLLet of sym (* variable *) * ll_expr (* value *) * ll_expr (* body *)
   | LLPrefix of egg_prefix_oper * sym
@@ -23,8 +22,8 @@ type ll_expr =
   | LLIf of sym (* condition *) * ll_expr * ll_expr
 
 and ll_fundef =
-	LLFlatFun of sym (* fun name *) * sym list (* params *) * ll_expr
-  | LLClsFun of sym  (* fun name *) * sym list (* free variables *) * sym list (* params *) * ll_expr
+  LLFlatFun of sym (* fun name *) * sym list (* params *) * ll_expr
+| LLClsFun of sym  (* fun name *) * sym list (* free variables *) * sym list (* params *) * ll_expr
 
 and ll_program = {
   funcs: ll_fundef list;

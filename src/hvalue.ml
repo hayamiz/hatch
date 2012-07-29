@@ -1,7 +1,7 @@
 
 (* Hatch value system *)
 
-exception Runtime_error
+exception Runtime_error of string
 
 let quote_string str =
   (Str.global_replace
@@ -28,9 +28,9 @@ and h_value =
   | HV_undef
   | HV_bool      of bool
   | HV_int       of int
+  | HV_fp        of int			(* for debugging *)
   | HV_float     of float
   | HV_string    of string
-  | HV_symbol    of h_symbol
   | HV_function  of h_function
   | HV_closure   of (h_function * h_value list)
 
@@ -42,7 +42,6 @@ let rec string_of_h_value (hv: h_value): string =
 	| HV_int x -> string_of_int x
 	| HV_float x -> string_of_float x
 	| HV_string x -> "\"" ^ (quote_string x) ^ "\""
-	| HV_symbol x -> x
 	| HV_function hf -> string_of_h_function hf
 	| HV_closure (hf, args) ->
 		"(" ^ (string_of_h_function hf) ^ "(" ^
@@ -103,3 +102,37 @@ let h_sub = h_num_infix (-) (-.)
 
 let h_div = h_num_infix (/) (/.)
 
+let h_2val_comp (comp: h_value -> h_value -> bool) =
+  (fun hv1 hv2 ->
+	 if (comp hv1 hv2) then
+	   hv2
+	 else
+	   HV_bool false)
+
+let h_2num_comp
+	(icomp: int -> int -> bool)
+	(fcomp: float -> float -> bool) =
+  h_2val_comp (fun hv1 hv2 ->
+	  match (hv1, hv2) with
+		| (HV_int x, HV_int y) -> icomp x y
+		| (HV_float x, HV_float y) -> fcomp x y
+		| (HV_int x, HV_float y) -> fcomp (float_of_int x) y
+		| (HV_float x, HV_int y) -> fcomp x (float_of_int y)
+		| _ -> raise (Runtime_error "Comparison operation on non-number objects"))
+
+let h_eq = h_2val_comp (=)
+
+let h_le = h_2num_comp (<=) (<=)
+let h_ge = h_2num_comp (>=) (>=)
+let h_lt = h_2num_comp (<) (<)
+let h_gt = h_2num_comp (>) (>)
+
+let h_land = h_2val_comp (fun x y -> h_is_true x && h_is_true y)
+
+let h_lor x y =
+  if h_is_true x then x
+  else if h_is_true y then y
+  else HV_bool false
+
+let h_lnot x =
+  HV_bool (not (h_is_true x))

@@ -21,7 +21,6 @@ let test_hval_h_is_true _ =
   assert_equal true (h_is_true (HV_float 0.0));
   assert_equal true (h_is_true (HV_float 1.0));
   assert_equal true (h_is_true (HV_float (-1.0)));
-  assert_equal true (h_is_true (HV_symbol (h_make_sym "foo")));
   assert_equal true (h_is_true (HV_function (HF_user ("hogefun", 1, 1))));
   assert_equal true (h_is_true (HV_function (HF_native ("print", h_native_print))));
   assert_equal true (h_is_true (HV_closure (HF_user ("hogefun", 1, 1), [HV_int 1])));

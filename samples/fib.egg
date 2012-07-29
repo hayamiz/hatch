@@ -1,9 +1,11 @@
 
 bind fib -> lambda (n) {
-  if n = 0 || n = 1
+  if n <= 0
+    0
+  eles if n = 1
     1
   else
     fib(n - 1) + fib(n - 2)
 };
 
-print(fib(10))
+puts(fib(2));

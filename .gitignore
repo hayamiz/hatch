@@ -2,9 +2,12 @@
 *.cmx
 *.cmi
 *.opt
+*.cmo
+*.cma
 *.a
 /test/testrun
 /src/hatch
 /src/lexer.ml
 /src/parser.ml
 /src/parser.mli
+/src/hatch.run
