@@ -4,9 +4,14 @@ type sym = string
 
 let counter = ref 0
 
-let gensym _ =
+let gensym ?(basesym="") _ =
   incr counter;
-  Printf.sprintf "sym#%d" !counter
+  let suffix = if (String.length basesym) > 0 then
+      "." ^ basesym
+    else
+      ""
+  in
+  (Printf.sprintf "sym#%d" !counter)  ^ suffix
 
 let comp_sym x y =
   if (String.length x >= 4 && (String.sub x 0 4) = "sym#") &&

@@ -1,5 +1,23 @@
-bind A -> lambda (f) {
-  lambda (g) {
-    f(lambda (arg){g(arg)})
+let Y -> lambda (f) {
+  let Y0 -> lambda (proc) {
+              f(lambda (arg) { (proc(proc))(arg) })
+            }
+  in
+  let Y1 -> lambda (proc) {
+              f(lambda (arg) { (proc(proc))(arg) })
+            }
+  in Y0(Y1)
+}
+in
+let fact0 -> lambda (f) {
+  lambda (n) {
+    if (n = 0)
+      1
+    else
+      n * f(n - 1)
   }
-};
+}
+in
+let fact -> Y(fact0)
+in
+puts(fact(1))

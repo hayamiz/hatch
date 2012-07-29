@@ -62,10 +62,10 @@ let rec string_of_normal_expr ?(indent = 0) e =
  *)
 let make_let v body_f =
   match v with
-	  NexpVar sym -> body_f sym
-	| _ ->
-		let tmp_sym = gensym () in
-		  NexpLet (tmp_sym, v, (body_f tmp_sym))
+    NexpVar sym -> body_f sym
+  | _ ->
+    let tmp_sym = gensym () in
+    NexpLet (tmp_sym, v, (body_f tmp_sym))
 
 let rec norm env exp =
   match exp with
