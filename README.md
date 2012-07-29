@@ -14,7 +14,7 @@ exercise of an university class.
 
 ```
 bind foo -> 1;
-print(foo); # prints "foo"
+print(foo); # prints "1"
 ```
 
 ```
