@@ -116,8 +116,8 @@ let test_vm_compile_flatfun _ =
 let test_vm_compile_clsfun _ =
   assert_eq_vminsts
     [VM_GOTO 5;
-     VM_LREF_PUSH 0;
      VM_LREF_PUSH 1;
+     VM_LREF_PUSH 0;
      VM_ADD;
      VM_RET;
      VM_PUSH HV_undef;
@@ -137,8 +137,8 @@ let test_vm_compile_clsfun _ =
 
   assert_eq_vminsts
     [VM_GOTO 5;
-     VM_LREF_PUSH 0;
      VM_LREF_PUSH 1;
+     VM_LREF_PUSH 0;
      VM_ADD;
      VM_RET;
      VM_PUSH HV_undef;
@@ -164,6 +164,38 @@ let test_vm_compile_clsfun _ =
        main =  (LLLet ("x",
                        LLInt 1,
                        LLLet ("f", LLMakeCls ("sym#add1", ["x"]),
+                              LLLet ("y", LLInt 2,
+                                     LLFunApply ("f", ["y"])))))});
+
+  assert_eq_vminsts
+    [VM_GOTO 5;
+     VM_LREF_PUSH 0;
+     VM_LREF_PUSH 1;
+     VM_SUB;
+     VM_RET;
+     VM_PUSH HV_undef;
+     VM_PUSH HV_undef;
+     VM_PUSH HV_undef;
+     VM_PUSH (HV_int 1);
+     VM_LSET 0;
+     VM_PUSH_FRAME;
+     VM_PUSH (HV_function (HF_user ("sym#sub1", 1, 2)));
+     VM_LREF_PUSH 0;
+     VM_PUSH (h_native_get "make_closure");
+     VM_CALL;
+     VM_LSET 1;
+     VM_PUSH (HV_int 2);
+     VM_LSET 2;
+     VM_PUSH_FRAME;
+     VM_LREF_PUSH 2;
+     VM_LREF_PUSH 1;
+     VM_CALL;
+     VM_HALT]
+    ({ funcs = [LLClsFun ("sym#sub1", ["sym#fv1"], ["arg"],
+                          LLInfix (InfixMinus, "arg", "sym#fv1"))];
+       main =  (LLLet ("x",
+                       LLInt 1,
+                       LLLet ("f", LLMakeCls ("sym#sub1", ["x"]),
                               LLLet ("y", LLInt 2,
                                      LLFunApply ("f", ["y"])))))});
   ()

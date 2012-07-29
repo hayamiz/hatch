@@ -128,8 +128,8 @@ let test_highlevel_compile_clsfun _ =
   assert_eq_hlvminsts
     [HL_GOTO "*MAIN*";
      HL_LABEL "sym#fun1";
-     HL_LREF_PUSH 0;
      HL_LREF_PUSH 1;
+     HL_LREF_PUSH 0;
      HL_ADD;
      HL_RET;
      HL_LABEL "*MAIN*";
@@ -151,8 +151,8 @@ let test_highlevel_compile_clsfun _ =
   assert_eq_hlvminsts
     [HL_GOTO "*MAIN*";
      HL_LABEL "sym#fun1";
-     HL_LREF_PUSH 0;
      HL_LREF_PUSH 1;
+     HL_LREF_PUSH 0;
      HL_ADD;
      HL_RET;
      HL_LABEL "*MAIN*";

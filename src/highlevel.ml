@@ -229,7 +229,7 @@ let compile_ll_fundef funenv (fundef: ll_fundef) =
     (funenv', body_insts @ [HL_RET])
   | (LLClsFun (sym, fvars, args, body)) ->
     let local_vars = (get_local_vars body) in
-    let localenv_vars = fvars @ args @ local_vars in
+    let localenv_vars = args @ fvars @ local_vars in
     let h_funval =
       HV_function (HF_user_highlevel (sym, sym, (List.length fvars) + (List.length args))) in
     let funenv' = (Smap.add sym h_funval funenv) in
