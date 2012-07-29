@@ -1,0 +1,22 @@
+puts(1 < 2 < 3 < 4 < 5);
+
+let x -> 3 in
+if (1 < x < 5)
+  puts("x is greater than 1 and smaller than 5")
+else
+  puts("else")
+;
+
+let x -> 3 in
+if (4 < x < 5)
+  puts("x is greater than 4 and smaller than 5")
+else
+  puts("else")
+;
+
+let t0 -> 1 in
+let t -> 5 in
+if (t0 < t < t0 + 5)
+  puts("ok")
+else
+  puts("ng")
