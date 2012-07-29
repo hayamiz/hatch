@@ -1,23 +1,18 @@
 let Y -> lambda (f) {
-  let Y0 -> lambda (proc) {
-              f(lambda (arg) { (proc(proc))(arg) })
-            }
-  in
-  let Y1 -> lambda (proc) {
-              f(lambda (arg) { (proc(proc))(arg) })
-            }
-  in Y0(Y1)
+  (lambda (proc) {
+    f(lambda (arg) { (proc(proc))(arg) })
+  })(lambda (proc) {
+    f(lambda (arg) { (proc(proc))(arg) })
+  })
 }
 in
 let fact0 -> lambda (f) {
   lambda (n) {
-    if (n = 0)
-      1
-    else
-      n * f(n - 1)
+    if (n = 0)  1
+    else        n * f(n - 1)
   }
 }
 in
 let fact -> Y(fact0)
 in
-puts(fact(5))
+  puts(fact(1), fact(2), fact(3), fact(4), fact(5), fact(6), fact(7), fact(8), fact(9), fact(10))

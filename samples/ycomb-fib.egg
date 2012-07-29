@@ -1,23 +1,19 @@
-bind Y -> lambda (f) {
-  let Y0 -> lambda (proc) {
-              f(lambda (arg) { (proc(proc))(arg) })
-            }
-  in
-  let Y1 -> lambda (proc) {
-              f(lambda (arg) { (proc(proc))(arg) })
-            }
-  in Y0(Y1)
-};
-
-let fact0 -> lambda (f) {
+let Y -> lambda (f) {
+  (lambda (proc) {
+    f(lambda (arg) { (proc(proc))(arg) })
+  })(lambda (proc) {
+    f(lambda (arg) { (proc(proc))(arg) })
+  })
+}
+in
+let fib0 -> lambda (f) {
   lambda (n) {
-    if (n = 0)
-      1
-    else
-      n * f(n - 1)
+    if (n <= 0)      0
+    else if (n = 1)  1
+    else f(n-1) + f(n-2);
   }
 }
 in
-let fact -> Y(fact0)
+let fib -> Y(fib0)
 in
-puts(fact(1))
+  puts(fib(1), fib(2), fib(3), fib(4), fib(5), fib(6), fib(7), fib(8), fib(9), fib(10))
