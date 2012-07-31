@@ -31,4 +31,4 @@ and ll_program = {
 }
 
 val string_of_ll_program: ll_program -> string
-val lambda_lift: Normal.normal_expr -> ll_program
+val lift_lambda: Normal.normal_expr -> ll_program

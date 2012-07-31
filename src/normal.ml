@@ -129,7 +129,7 @@ let rec norm env exp =
 let normalize exp =
   norm Smap.empty exp
 
-let rec reduce_let nexp =
+let rec serialize_let nexp =
   match nexp with
 	  NexpVar _
 	| NexpInt _
@@ -139,27 +139,27 @@ let rec reduce_let nexp =
 	| NexpUndef ->
 		nexp
 	| NexpLambda (params, body) ->
-		NexpLambda (params, reduce_let body)
+		NexpLambda (params, serialize_let body)
 	| NexpApply _ ->
 		nexp
 	| NexpBind (id, v) ->
-		NexpBind (id, reduce_let v)
+		NexpBind (id, serialize_let v)
 	| NexpLet (id1, NexpLet (id2, v1, v2), v3) ->
-		let reduced_v1 = reduce_let v1 in
-		let reduced_v2 = reduce_let v2 in
-		let reduced_v3 = reduce_let v3 in
+		let reduced_v1 = serialize_let v1 in
+		let reduced_v2 = serialize_let v2 in
+		let reduced_v3 = serialize_let v3 in
 		let new_nexp =
 		  NexpLet (id2, reduced_v1,
 				   NexpLet (id1, reduced_v2, reduced_v3))
 		in
-		  reduce_let new_nexp
+		  serialize_let new_nexp
 	| NexpLet (id, v, body) ->
-		NexpLet (id, reduce_let v, reduce_let body)
+		NexpLet (id, serialize_let v, serialize_let body)
 	| NexpPrefix _
 	| NexpInfix _ ->
 		nexp
 	| NexpIf (cond, if_body, else_body) ->
-		NexpIf (cond, reduce_let if_body, reduce_let else_body)
+		NexpIf (cond, serialize_let if_body, serialize_let else_body)
 
 let rec normal_expr_equal ?(exact=false) expected actual =
   let comp_sym x y =

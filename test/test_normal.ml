@@ -13,7 +13,7 @@ let assert_eq_letreduced_normal_expr expected exp_str =
   assert_equal ~msg:("Normalizing: " ^ exp_str)
 	~cmp:normal_expr_equal
 	~printer:(fun ne -> "\n" ^ (string_of_normal_expr ne) ^ "\n")
-	expected (reduce_let (normalize (parse_string exp_str)))
+	expected (serialize_let (normalize (parse_string exp_str)))
 
 let test_norm_simple_exp _ =
   assert_eq_normal_expr

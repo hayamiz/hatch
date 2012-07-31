@@ -53,6 +53,7 @@
 %left EQ LE GE LT GT    /* 4th precedence */
 %left PLUS MINUS        /* 3rd precedence */
 %left MUL DIV           /* 2nd precedence */
+%right prec_prefix
 %start main             /* the entry point */
 %type <Syntax.egg_expr> main
 %%
@@ -115,8 +116,8 @@ let_expr:
 
 prefix_expr:
     primary_expr                    { $1 }
-  | PLUS  primary_expr  { ExpPrefix (PrefixPlus,  $2) }
-  | MINUS primary_expr  { ExpPrefix (PrefixMinus, $2) }
+  | PLUS  primary_expr %prec prec_prefix { ExpPrefix (PrefixPlus,  $2) }
+  | MINUS primary_expr %prec prec_prefix { ExpPrefix (PrefixMinus, $2) }
   | LNOT  primary_expr              { ExpPrefix (PrefixLnot,  $2) }
 
 infix_expr:

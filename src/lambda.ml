@@ -102,7 +102,7 @@ let rec replace_symbols mapping lle =
     LLIf (findsym sym, replace_symbols mapping e1, replace_symbols mapping e2)
   | _ -> lle
 
-let rec do_lambda_lift (env: Sset.t) (funcs: ll_fundef list) (nexp: Normal.normal_expr) =
+let rec do_lift_lambda (env: Sset.t) (funcs: ll_fundef list) (nexp: Normal.normal_expr) =
   let simple_ll_program e =
     { funcs = funcs;
       main = e}
@@ -122,7 +122,7 @@ let rec do_lambda_lift (env: Sset.t) (funcs: ll_fundef list) (nexp: Normal.norma
     let param_env = Sset.sset_of_list params in
     let env' = Sset.union env param_env in
     let fvars = Normal.freevars param_env body in
-    let { funcs = funcs'; main = body' } = do_lambda_lift env' funcs body in
+    let { funcs = funcs'; main = body' } = do_lift_lambda env' funcs body in
     let new_funname = gensym () in
     begin
       match (Sset.elements (Sset.inter fvars env)) with
@@ -145,30 +145,30 @@ let rec do_lambda_lift (env: Sset.t) (funcs: ll_fundef list) (nexp: Normal.norma
     simple_ll_program (LLFunApply (f, args))
   | NexpBind (var, value) ->
     let {funcs = funcs'; main = value' } =
-      do_lambda_lift env funcs value
+      do_lift_lambda env funcs value
     in
     make_ll_program funcs' (LLBind (var, value'))
   | NexpLet (var, value, body) ->
     let {funcs = funcs'; main = value' } =
-      do_lambda_lift env funcs value
+      do_lift_lambda env funcs value
     in
     let env' =
       Sset.add var env
     in
     let {funcs = funcs''; main = body' } =
-      do_lambda_lift env' funcs' body
+      do_lift_lambda env' funcs' body
     in
     make_ll_program funcs'' (LLLet (var, value', body'))
   | NexpPrefix (op, v) -> simple_ll_program (LLPrefix (op, v))
   | NexpInfix (op, v1, v2) -> simple_ll_program (LLInfix (op, v1, v2))
   | NexpIf (cond, if_body, else_body) ->
     let {funcs = funcs'; main = if_body' } =
-      do_lambda_lift env funcs if_body
+      do_lift_lambda env funcs if_body
     in
     let {funcs = funcs''; main = else_body' } =
-      do_lambda_lift env funcs' else_body
+      do_lift_lambda env funcs' else_body
     in
     make_ll_program funcs'' (LLIf (cond, if_body', else_body'))
 
-let lambda_lift nexp =
-  do_lambda_lift Sset.empty [] nexp
+let lift_lambda nexp =
+  do_lift_lambda Sset.empty [] nexp

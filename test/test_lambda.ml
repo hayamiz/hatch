@@ -74,7 +74,7 @@ let assert_equal_lambda_shift expected actual =
   assert_equal ~msg:("Lambda-Lifting: " ^ (string_of_normal_expr actual))
     ~cmp:(fun x y -> equal_ll_program x y)
     ~printer:(fun lle -> "\n" ^ (string_of_ll_program lle) ^ "\n")
-    expected (lambda_lift actual)
+    expected (lift_lambda actual)
 
 let test_lambda_simple _ =
   assert_equal_lambda_shift

@@ -3,10 +3,10 @@ let hoge _ =
   let lexbuf = Lexing.from_channel stdin in
 	print_string
 	  (Lambda.string_of_ll_program
-		 (Lambda.lambda_lift
+		 (Lambda.lift_lambda
 			(Constfold.const_fold
 			   (Beta.beta_reduce
-				  (Normal.reduce_let
+				  (Normal.serialize_let
 					 (Alpha.alpha_convert
 						(Normal.normalize
 						   (Parser.main Lexer.token lexbuf))))))));
@@ -40,7 +40,7 @@ let step4 _ =
   let lexbuf = Lexing.from_channel stdin in
 	print_string
 	  (Normal.string_of_normal_expr
-		 (Normal.reduce_let
+		 (Normal.serialize_let
 			(Alpha.alpha_convert
 			   (Normal.normalize
 				  (Parser.main Lexer.token lexbuf)))));
@@ -51,7 +51,7 @@ let step5 _ =
 	print_string
 	  (Normal.string_of_normal_expr
 		 (Beta.beta_reduce
-			(Normal.reduce_let
+			(Normal.serialize_let
 			   (Alpha.alpha_convert
 				  (Normal.normalize
 					 (Parser.main Lexer.token lexbuf))))));
@@ -61,10 +61,10 @@ let step6 _ =
   let lexbuf = Lexing.from_channel stdin in
 	print_string
 	  (Lambda.string_of_ll_program
-		 (Lambda.lambda_lift
+		 (Lambda.lift_lambda
 			(Constfold.const_fold
 			   (Beta.beta_reduce
-				  (Normal.reduce_let
+				  (Normal.serialize_let
 					 (Alpha.alpha_convert
 						(Normal.normalize
 						   (Parser.main Lexer.token lexbuf))))))));
@@ -75,10 +75,10 @@ let step7 _ =
 	print_string
 	  (Highlevel.string_of_hlvminsts
 		 (Highlevel.compile
-			(Lambda.lambda_lift
+			(Lambda.lift_lambda
 			   (Constfold.const_fold
 				  (Beta.beta_reduce
-					 (Normal.reduce_let
+					 (Normal.serialize_let
 						(Alpha.alpha_convert
 						   (Normal.normalize
 							  (Parser.main Lexer.token lexbuf)))))))));
@@ -90,10 +90,10 @@ let step8 _ =
 	  (Vm.string_of_vminsts
 		 (Vm.compile
 			(Highlevel.compile
-			   (Lambda.lambda_lift
+			   (Lambda.lift_lambda
 				  (Constfold.const_fold
 					 (Beta.beta_reduce
-						(Normal.reduce_let
+						(Normal.serialize_let
 						   (Alpha.alpha_convert
 							  (Normal.normalize
 								 (Parser.main Lexer.token lexbuf))))))))));
@@ -118,10 +118,10 @@ let run_file filepath =
     begin
       print_endline
 	(Lambda.string_of_ll_program
-	   (Lambda.lambda_lift
+	   (Lambda.lift_lambda
 	      (Constfold.const_fold
 		 (Beta.beta_reduce
-		    (Normal.reduce_let
+		    (Normal.serialize_let
 		       (Alpha.alpha_convert
 			  (Normal.normalize
 			     (Parser.main Lexer.token lexbuf))))))));
@@ -132,10 +132,10 @@ let run_file filepath =
       print_endline
 	(Highlevel.string_of_hlvminsts
 	   (Highlevel.compile
-	      (Lambda.lambda_lift
+	      (Lambda.lift_lambda
 		 (Constfold.const_fold
 		    (Beta.beta_reduce
-		       (Normal.reduce_let
+		       (Normal.serialize_let
 			  (Alpha.alpha_convert
 			     (Normal.normalize
 				(Parser.main Lexer.token lexbuf)))))))));

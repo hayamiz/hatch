@@ -85,4 +85,4 @@ OCAML_LIB_FLAGS +=
 .PHONY: clean
 
 clean:
-  rm -f lexer.ml parser.ml parser.mli *~ *.run *.opt *.cmi *.cmx *.o *.omc *.cma *.cmxa *.a $(PROGRAM) 
+  rm -f lexer.ml parser.ml parser.mli *~ *.run *.opt *.cmo *.cmi *.cmx *.o *.omc *.cma *.cmxa *.a $(PROGRAM) 

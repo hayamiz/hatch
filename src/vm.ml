@@ -47,10 +47,10 @@ let rec vminst_equal ?(exact=false) expected actual =
   | (VM_PUSH x, VM_PUSH y) ->
     begin
       match (x, y) with
-	(HV_function (HF_native (name1, _)), HV_function (HF_native (name2, _))) ->
-	  name1 = name2
+        (HV_function (HF_native (name1, _)), HV_function (HF_native (name2, _))) ->
+          name1 = name2
       | (HV_closure (HF_native (name1, _), _), HV_closure (HF_native (name2, _), _)) ->
-	name1 = name2
+        name1 = name2
       | _ -> x = y
     end
   | (x, y) -> x = y
@@ -93,7 +93,7 @@ and string_of_vminsts insts =
   (String.concat "\n"
      (list_mapi (fun addr inst ->
        (string_of_int addr) ^ ": " ^ (string_of_vminst inst))
-	insts))
+        insts))
 
 and vminsts_equal ?(exact=false) expected actual =
   match (expected, actual) with
@@ -103,7 +103,7 @@ and vminsts_equal ?(exact=false) expected actual =
   | (e :: _, a :: _) ->
     begin
       print_string ("vminsts_equal unmatched: e = " ^
-		       (string_of_vminst e) ^ ", a = " ^ (string_of_vminst a));
+                       (string_of_vminst e) ^ ", a = " ^ (string_of_vminst a));
       false
     end
   | _ -> false
@@ -118,7 +118,7 @@ let compile (hlvminsts: hlvminst list): vminst list =
   let (addrs, _) =
     List.fold_left (fun (addrs, cur_addr) hlvminst ->
       match hlvminst with
-	HL_LABEL l -> ((Smap.add l cur_addr addrs), cur_addr)
+        HL_LABEL l -> ((Smap.add l cur_addr addrs), cur_addr)
       | _ -> (addrs, cur_addr + 1))
       (Smap.empty, 0) hlvminsts
   in
@@ -128,39 +128,39 @@ let compile (hlvminsts: hlvminst list): vminst list =
   let inst_list = List.fold_right
     (fun hlinst insts ->
       match hlinst with
-	HL_LABEL _ -> insts
+        HL_LABEL _ -> insts
       | _ ->
-	let inst = match hlinst with
-	    HL_NOP -> VM_NOP
-	  | HL_PUSH hv -> VM_PUSH (compile_h_value addrs hv)
-	  | HL_POP -> VM_POP
-	  | HL_DUP -> VM_DUP
-	  | HL_LREF_PUSH x -> VM_LREF_PUSH x
-	  | HL_GREF_PUSH s -> VM_GREF_PUSH s
-	  | HL_LSET x -> VM_LSET x
-	  | HL_GSET x -> VM_GSET x
-	  | HL_ADD -> VM_ADD
-	  | HL_SUB -> VM_SUB
-	  | HL_MUL -> VM_MUL
-	  | HL_DIV -> VM_DIV
-	  | HL_EQ -> VM_EQ
-	  | HL_LE -> VM_LE
-	  | HL_GE -> VM_GE
-	  | HL_LT -> VM_LT
-	  | HL_GT -> VM_GT
-	  | HL_LAND -> VM_LAND
-	  | HL_LOR -> VM_LOR
-	  | HL_LNOT -> VM_LNOT
-	  | HL_LABEL _ -> raise Compile_error
-	  | HL_GOTO x -> VM_GOTO (get_addr x)
-	  | HL_BIF x -> VM_BIF (get_addr x)
-	  | HL_BIFN x -> VM_BIFN (get_addr x)
-	  | HL_PUSH_FRAME -> VM_PUSH_FRAME
-	  | HL_CALL -> VM_CALL
-	  | HL_RET -> VM_RET
-	  | HL_HALT -> VM_HALT
-	in
-	inst :: insts)
+        let inst = match hlinst with
+            HL_NOP -> VM_NOP
+          | HL_PUSH hv -> VM_PUSH (compile_h_value addrs hv)
+          | HL_POP -> VM_POP
+          | HL_DUP -> VM_DUP
+          | HL_LREF_PUSH x -> VM_LREF_PUSH x
+          | HL_GREF_PUSH s -> VM_GREF_PUSH s
+          | HL_LSET x -> VM_LSET x
+          | HL_GSET x -> VM_GSET x
+          | HL_ADD -> VM_ADD
+          | HL_SUB -> VM_SUB
+          | HL_MUL -> VM_MUL
+          | HL_DIV -> VM_DIV
+          | HL_EQ -> VM_EQ
+          | HL_LE -> VM_LE
+          | HL_GE -> VM_GE
+          | HL_LT -> VM_LT
+          | HL_GT -> VM_GT
+          | HL_LAND -> VM_LAND
+          | HL_LOR -> VM_LOR
+          | HL_LNOT -> VM_LNOT
+          | HL_LABEL _ -> raise Compile_error
+          | HL_GOTO x -> VM_GOTO (get_addr x)
+          | HL_BIF x -> VM_BIF (get_addr x)
+          | HL_BIFN x -> VM_BIFN (get_addr x)
+          | HL_PUSH_FRAME -> VM_PUSH_FRAME
+          | HL_CALL -> VM_CALL
+          | HL_RET -> VM_RET
+          | HL_HALT -> VM_HALT
+        in
+        inst :: insts)
     hlvminsts []
   in
   inst_list
@@ -281,56 +281,56 @@ let run_vminsts (insts: vminst list): h_value =
       step genv addr sp fp ep
     | VM_BIF addr ->
       if (h_is_true stack.(sp)) then
-	step genv addr (sp-1) fp ep
+        step genv addr (sp-1) fp ep
       else
-	step genv (pc+1) (sp-1) fp ep
+        step genv (pc+1) (sp-1) fp ep
     | VM_BIFN addr -> 
       if (h_is_true stack.(sp)) then
-	step genv (pc+1) (sp-1) fp ep
+        step genv (pc+1) (sp-1) fp ep
       else
-	step genv addr (sp-1) fp ep
+        step genv addr (sp-1) fp ep
     | VM_PUSH_FRAME ->
       stack.(sp + 1) <- HV_fp fp;
       step genv (pc+1) (sp+1) (sp+1) ep
     | VM_CALL ->
       let nargs = sp - fp - 1 in
       begin
-	match stack.(sp) with
-	| HV_function (HF_user (name, addr, arity)) ->
-	  if arity = nargs then
-	    begin
-	      callstack := (pc+1)::!callstack;
-	      step genv addr (sp-1) fp (fp+1)
-	    end
-	  else
-	    arity_error name arity nargs
-	| HV_function (HF_native (name, f)) ->
-	  let fp' = match stack.(fp) with 
-	      HV_fp x -> x
-	    | _ -> runtime_error ("fp error")
-	  in
-	  let args = List.map (fun idx -> stack.(idx)) (iota (fp+1) (sp-1))
-	  in
-	  stack.(fp) <- f args;
-	  step genv (pc+1) fp fp' ep
+        match stack.(sp) with
+        | HV_function (HF_user (name, addr, arity)) ->
+          if arity = nargs then
+            begin
+              callstack := (pc+1)::!callstack;
+              step genv addr (sp-1) fp (fp+1)
+            end
+          else
+            arity_error name arity nargs
+        | HV_function (HF_native (name, f)) ->
+          let fp' = match stack.(fp) with 
+              HV_fp x -> x
+            | _ -> runtime_error ("fp error")
+          in
+          let args = List.map (fun idx -> stack.(idx)) (iota (fp+1) (sp-1))
+          in
+          stack.(fp) <- f args;
+          step genv (pc+1) fp fp' ep
         | HV_closure (HF_user (name, addr, arity), fvar_args) ->
-	  if arity = nargs + (List.length fvar_args) then
-	    begin
-	      let _ = List.fold_left (fun sp' arg -> stack.(sp') <- arg; sp' + 1) sp fvar_args in
-	      callstack := (pc+1)::!callstack;
-	      step genv addr (sp) fp (fp+1)
-	    end
-	  else
-	    arity_error name (arity - (List.length fvar_args)) nargs
-	| _ ->
-	  runtime_error ("Egg object '" ^ (string_of_h_value stack.(sp)) ^
-			    "' is not a function.")
+          if arity = nargs + (List.length fvar_args) then
+            begin
+              let _ = List.fold_left (fun sp' arg -> stack.(sp') <- arg; sp' + 1) sp fvar_args in
+              callstack := (pc+1)::!callstack;
+              step genv addr (sp) fp (fp+1)
+            end
+          else
+            arity_error name (arity - (List.length fvar_args)) nargs
+        | _ ->
+          runtime_error ("Egg object '" ^ (string_of_h_value stack.(sp)) ^
+                            "' is not a function.")
       end
     | VM_RET ->
       let retval = stack.(sp) in
       let fp' = match stack.(fp) with
-	  HV_fp x -> x
-	| _ -> runtime_error ("fp error")
+          HV_fp x -> x
+        | _ -> runtime_error ("fp error")
       in
       let return_addr = List.hd !callstack in
       stack.(fp) <- retval;
