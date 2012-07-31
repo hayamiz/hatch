@@ -1,19 +1,7 @@
-
 (* Data structure and functions for syntax tree *)
 
-type location = {
-  file: string;						(* filename ("(none)" if not available) *)
-  line: int;							(* line number *)
-  offset: int;						(* offset from the beginning of the line *)
-  byte: int;							(* byte position from the beginning of the file *)
-}
-
-val noloc: location
-
-val current_file: string ref
-
 type egg_expr =
-	ExpNop								(* no op *)
+    ExpNop                                (* no op *)
   | ExpLiteral of egg_literal
   | ExpLambda of Symbol.sym list * egg_expr (* TODO: fix param list *)
   | ExpApply   of egg_expr * egg_expr list
@@ -25,12 +13,12 @@ type egg_expr =
   | ExpIf      of egg_expr * egg_expr * egg_expr
 
 and egg_prefix_oper =
-	PrefixPlus
+    PrefixPlus
   | PrefixMinus
   | PrefixLnot
 
 and egg_infix_oper =
-	InfixPlus
+    InfixPlus
   | InfixMinus
   | InfixMul
   | InfixDiv
@@ -43,7 +31,7 @@ and egg_infix_oper =
   | InfixLor
 
 and egg_literal = 
-	LitIdent of Symbol.sym
+    LitIdent of Symbol.sym
   | LitInt of (int)
   | LitFloat of (float)
   | LitString of (string)
