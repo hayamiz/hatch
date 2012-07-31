@@ -182,7 +182,15 @@ let rec compile_ll_expr funenv (localenv: sym list) (lle: ll_expr): hlvminst lis
       else
         (print_string ("localenv = " ^ (String.concat ", " localenv) ^ "\n"); raise Compile_error)
     | LLPrefix (op, v) ->
-      raise (Failure "prefix operator not implemented")
+      begin
+        match op with
+        | PrefixPlus ->
+          [HL_PUSH (HV_int 0); (push_value_by_sym v); HL_ADD]
+        | PrefixMinus ->
+          [HL_PUSH (HV_int 0); (push_value_by_sym v); HL_SUB]
+        | PrefixLnot ->
+          [(push_value_by_sym v); HL_LNOT]
+      end
     | LLInfix (op, v1, v2) ->
       (push_value_by_sym v1) ::
         (push_value_by_sym v2) ::

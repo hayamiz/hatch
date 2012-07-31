@@ -217,6 +217,8 @@ let assert_eq_run_vminsts expected str =
       end
 
 let test_vm_run_simple _ =
+  assert_eq_run_vminsts (HV_int 3) "1 - -2";
+  assert_eq_run_vminsts (HV_int (-1)) "1 + -2";
   assert_eq_run_vminsts (HV_int 3) "1 + 2";
   assert_eq_run_vminsts (HV_string "foo") "\"foo\"";
   assert_eq_run_vminsts (HV_undef) "print(\"hello world\")";
