@@ -1,0 +1,12 @@
+bind fib_iter -> lambda (i, n0, n1) {
+  if i <= 0
+    n0
+  else if i = 1
+    n1
+  else
+    fib_iter(i - 1, n1, n0 + n1)
+};
+
+let fib -> lambda (n) { fib_iter(n, 0, 1) }
+in
+  puts(fib(1),fib(2),fib(3),fib(4),fib(5),fib(6),fib(7),fib(8),fib(9),fib(10));
