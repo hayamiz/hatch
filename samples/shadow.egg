@@ -1,0 +1,5 @@
+let x -> 1 in {
+  let x -> 2 in
+    puts(x);
+  puts(x)
+}
